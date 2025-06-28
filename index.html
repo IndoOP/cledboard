@@ -67,17 +67,9 @@
                 <button id="circle-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Circle (C)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg></button>
                 <button id="triangle-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Triangle"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/></svg></button>
                 <button id="text-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Add Text (T)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/></svg></button>
-                
-                <!-- NEW: Math Tool -->
-                <button id="math-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Insert Math (M)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.59c-5.83-3.2-9.59-8.4-9.59-14.23 0-2.07.83-3.96 2.2-5.36 2.37-2.37 6.25-2.37 8.62 0l.98.98.98-.98c2.37-2.37 6.25-2.37 8.62 0 1.37 1.39 2.2 3.29 2.2 5.36 0 5.83-3.76 11.03-9.59 14.23Z"/><path d="M12 13V7h-2"/><path d="M12 7h2"/></svg>
-                </button>
-                <!-- NEW: PDF Import Tool -->
-                <button id="pdf-import-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Import PDF">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><path d="M14 2v6h6"/><path d="M2 15.5v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2z"/></svg>
-                </button>
+                <button id="math-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Insert Math (M)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.59c-5.83-3.2-9.59-8.4-9.59-14.23 0-2.07.83-3.96 2.2-5.36 2.37-2.37 6.25-2.37 8.62 0l.98.98.98-.98c2.37-2.37 6.25-2.37 8.62 0 1.37 1.39 2.2 3.29 2.2 5.36 0 5.83-3.76 11.03-9.59 14.23Z"/><path d="M12 13V7h-2"/><path d="M12 7h2"/></svg></button>
+                <button id="pdf-import-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Import PDF"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><path d="M14 2v6h6"/><path d="M2 15.5v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2z"/></svg></button>
                 <input type="file" id="pdf-input" class="hidden" accept="application/pdf">
-
                 <button id="image-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Add Image (I)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></button>
                 <input type="file" id="image-input" class="hidden" accept="image/*">
                 <button id="delete-tool" class="tool-btn p-2 rounded-md hover:bg-red-500 hover:text-white dark:hover:bg-red-600" title="Delete (Delete/Backspace)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
@@ -113,7 +105,7 @@
         </div>
     </div>
 
-    <!-- NEW: Modal for Math Input and other dialogs -->
+    <!-- Modal for Math Input and other dialogs -->
     <div id="modal" class="modal-backdrop">
         <div class="modal-content w-full max-w-md">
             <h3 id="modal-title" class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100"></h3>
@@ -154,7 +146,6 @@
                 canvas = new fabric.Canvas(canvasEl, {
                     isDrawingMode: true,
                     backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-                    selection: true,
                 });
 
                 updateDrawingTool();
@@ -169,6 +160,52 @@
                 canvas.on('mouse:up', handleMouseUp);
             }
             
+            // --- TOOL MANAGEMENT: UPDATED FOR SELECTION FIX ---
+            function setTool(tool) {
+                currentTool = tool;
+                const drawingTools = ['draw', 'eraser'];
+
+                // Set fabric.js native drawing mode for pencil/eraser
+                canvas.isDrawingMode = drawingTools.includes(tool);
+
+                // Control object selectability based on the current tool
+                canvas.forEachObject(obj => {
+                    // Objects are only selectable when the 'select' tool is active.
+                    obj.selectable = (tool === 'select');
+                });
+                
+                // Allow creating a selection box only with the 'select' tool
+                canvas.selection = (tool === 'select');
+                
+                // Set the cursor style
+                canvas.defaultCursor = tool === 'select' ? 'default' : 'crosshair';
+
+                // Deselect any active object when switching away from the select tool
+                if (tool !== 'select') {
+                    canvas.discardActiveObject().renderAll();
+                }
+
+                updateDrawingTool(); // Configure brush for pencil/eraser
+                
+                // Update UI button states
+                document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(`${tool}-tool`).classList.add('active');
+            }
+
+
+            // --- HISTORY (UNDO/REDO): UPDATED FOR SELECTION FIX ---
+            function loadState(state) {
+                canvas.loadFromJSON(state, () => {
+                    // After loading objects from history, re-apply the correct selectability
+                    // based on the currently active tool. This ensures the fix works
+                    // correctly after undo/redo or switching slides.
+                    canvas.forEachObject(obj => {
+                        obj.selectable = (currentTool === 'select');
+                    });
+                    canvas.renderAll();
+                });
+            }
+
             // --- SLIDE MANAGEMENT ---
             function initSlides() { addSlide(); }
 
@@ -179,7 +216,6 @@
                     data: data || { objects: [], background: isDarkMode ? '#1f2937' : '#ffffff' }
                 };
                 slides.push(newSlideData);
-                // If it's the first slide, or if we are adding a slide for PDF import, switch to it.
                 if (slides.length === 1 || data) {
                      switchSlide(slides.length - 1);
                 }
@@ -187,7 +223,7 @@
             }
 
             function saveCurrentSlideState() {
-                 if (slides[currentSlideIndex]) {
+                 if (currentSlideIndex > -1 && slides[currentSlideIndex]) {
                     slides[currentSlideIndex].data = canvas.toJSON();
                 }
             }
@@ -197,11 +233,14 @@
                 saveCurrentSlideState();
                 currentSlideIndex = index;
                 const slide = slides[currentSlideIndex];
-                canvas.loadFromJSON(slide.data, () => {
-                     // Ensure background color is correctly set
-                     canvas.setBackgroundColor(slide.data.background, canvas.renderAll.bind(canvas));
-                     if (slide.history.length === 0) { saveState(); }
-                });
+                
+                // The loadState function now handles setting selectability
+                loadState(slide.data);
+
+                // Ensure background color is set correctly on switch
+                canvas.setBackgroundColor(slide.data.background, canvas.renderAll.bind(canvas));
+                
+                if (slide.history.length === 0) { saveState(); }
                 renderSlideThumbnails();
             }
 
@@ -235,40 +274,37 @@
                 });
             }
 
-            // --- MODAL DIALOG ---
+            // --- The rest of the script is here ---
+            // The following functions are unchanged from the previous version.
+            // They include modal dialogs, MathJax, PDF import, color palettes, etc.
+            
             function showModal(title, body, footer) {
                 document.getElementById('modal-title').innerHTML = title;
                 document.getElementById('modal-body').innerHTML = body;
                 document.getElementById('modal-footer').innerHTML = '';
                 if(footer) document.getElementById('modal-footer').appendChild(footer);
-
                 document.getElementById('modal').classList.add('visible');
             }
 
             function hideModal() {
                 document.getElementById('modal').classList.remove('visible');
             }
-
-            // --- NEW: MATHJAX INTEGRATION ---
+            
             function showMathModal() {
                 const title = "Insert Mathematical Expression (LaTeX)";
                 const body = `<textarea id="latex-input" class="w-full h-24 p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-gray-200" placeholder="e.g., \\\\frac{-b \\\\pm \\\\sqrt{b^2-4ac}}{2a}"></textarea>`;
-                
                 const footer = document.createElement('div');
                 footer.className = 'flex justify-end space-x-2';
                 const cancelBtn = document.createElement('button');
                 cancelBtn.textContent = 'Cancel';
                 cancelBtn.className = 'px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500';
                 cancelBtn.onclick = hideModal;
-
                 const insertBtn = document.createElement('button');
                 insertBtn.textContent = 'Insert';
                 insertBtn.className = 'px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600';
                 insertBtn.onclick = insertMath;
-
                 footer.appendChild(cancelBtn);
                 footer.appendChild(insertBtn);
-
                 showModal(title, body, footer);
                 document.getElementById('latex-input').focus();
             }
@@ -276,91 +312,50 @@
             function insertMath() {
                 const latex = document.getElementById('latex-input').value;
                 if (!latex.trim()) return;
-
-                // Temporarily show a loading message in the modal
                 document.getElementById('modal-body').innerHTML = '<p>Rendering equation...</p>';
                 document.getElementById('modal-footer').innerHTML = '';
-
-
                 MathJax.tex2svgPromise(latex, { display: true }).then((node) => {
                     const svgNode = node.querySelector('svg');
                     svgNode.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                    // Use the current brush color for the math expression
                     svgNode.style.color = brushColor; 
-                    
                     const svgData = new XMLSerializer().serializeToString(svgNode);
                     const dataUrl = 'data:image/svg+xml;base64,' + window.btoa(svgData);
-
                     fabric.Image.fromURL(dataUrl, (img) => {
-                        img.set({
-                            left: canvas.width / 2,
-                            top: canvas.height / 2,
-                            originX: 'center',
-                            originY: 'center'
-                        });
+                        img.set({ left: canvas.width / 2, top: canvas.height / 2, originX: 'center', originY: 'center', isSvg: true });
                         canvas.add(img).setActiveObject(img).renderAll();
                         saveState();
                         hideModal();
                     });
                 }).catch((err) => {
-                     // On error, show message and restore buttons
                     showMathModal();
                     document.getElementById('modal-body').insertAdjacentHTML('beforeend', `<p class="text-red-500 mt-2">Error: ${err.message}</p>`);
                 });
             }
 
-
-            // --- NEW: PDF IMPORT ---
             async function importPDF(file) {
                 const fileReader = new FileReader();
-
                 fileReader.onload = async function() {
                     const typedarray = new Uint8Array(this.result);
-                    
                     showModal('Importing PDF', '<p id="pdf-progress">Loading PDF...</p>', null);
-
                     try {
                         const pdf = await pdfjsLib.getDocument(typedarray).promise;
                         const numPages = pdf.numPages;
                         document.getElementById('pdf-progress').textContent = `Importing ${numPages} pages...`;
-
-                        // Add a new slide for each page of the PDF
                         for (let i = 1; i <= numPages; i++) {
                              document.getElementById('pdf-progress').textContent = `Processing page ${i} of ${numPages}...`;
                             const page = await pdf.getPage(i);
                             const viewport = page.getViewport({ scale: 1.5 });
-
                             const pdfCanvas = document.createElement('canvas');
                             const context = pdfCanvas.getContext('2d');
                             pdfCanvas.height = viewport.height;
                             pdfCanvas.width = viewport.width;
-
                             await page.render({ canvasContext: context, viewport: viewport }).promise;
-
                             const imgData = pdfCanvas.toDataURL('image/png');
-                            
-                            // Create a new slide and set its background
-                            const slideData = {
-                                version: fabric.version,
-                                objects: [], // Start with a blank page of objects
-                                backgroundImage: {
-                                    type: 'image',
-                                    src: imgData,
-                                    // Make the background image fit the canvas dimensions
-                                    scaleX: canvas.width / viewport.width,
-                                    scaleY: canvas.height / viewport.height,
-                                },
-                                background: isDarkMode ? '#1f2937' : '#ffffff'
-                            };
-
-                            // Add a new slide with the PDF page as the background
+                            const slideData = { version: fabric.version, objects: [], backgroundImage: { type: 'image', src: imgData, scaleX: canvas.width / viewport.width, scaleY: canvas.height / viewport.height, }, background: isDarkMode ? '#1f2937' : '#ffffff' };
                             addSlide(slideData);
                         }
-                        
-                        // Switch to the first of the newly imported slides
                         switchSlide(slides.length - numPages);
                         hideModal();
-
                     } catch(err) {
                         showModal('Error', `<p class="text-red-500">Could not import PDF: ${err.message}</p>`, null);
                         setTimeout(hideModal, 3000);
@@ -369,8 +364,6 @@
                 fileReader.readAsArrayBuffer(file);
             }
             
-            // --- EVENT LISTENERS BINDING---
-            // ... (All previous tool event listeners are here)
             document.getElementById('select-tool').onclick = () => setTool('select');
             document.getElementById('draw-tool').onclick = () => setTool('draw');
             document.getElementById('eraser-tool').onclick = () => setTool('eraser');
@@ -394,20 +387,17 @@
             document.getElementById('export-pdf-btn').onclick = exportToPDF;
             document.getElementById('dark-mode-toggle').onclick = toggleDarkMode;
             document.getElementById('add-slide-btn').onclick = () => addSlide();
-            // New Listeners
             document.getElementById('math-tool').onclick = showMathModal;
             document.getElementById('pdf-import-tool').onclick = () => document.getElementById('pdf-input').click();
             document.getElementById('pdf-input').onchange = (e) => {
                 const file = e.target.files[0];
                 if (file) { importPDF(file); }
-                 e.target.value = null; // Reset input so same file can be re-uploaded
+                 e.target.value = null;
             };
-
             document.getElementById('modal').onclick = (e) => {
                 if (e.target.id === 'modal') hideModal();
             };
             
-            // Tool Settings Listeners
             document.getElementById('pen-size').oninput = (e) => { penSize = e.target.value; updateDrawingTool(); };
             document.getElementById('eraser-size').oninput = (e) => { eraserSize = e.target.value; updateDrawingTool(); };
             document.querySelectorAll('.pen-size-btn').forEach(btn => {
@@ -419,7 +409,6 @@
             });
             document.getElementById('stabilizer-toggle').onchange = (e) => { useStabilizer = e.target.checked; updateDrawingTool(); };
 
-            // Keyboard shortcuts
             window.addEventListener('keydown', (e) => {
                  if (document.getElementById('modal').classList.contains('visible')) {
                     if (e.key === 'Escape') hideModal();
@@ -427,7 +416,6 @@
                     return;
                 }
                 if (canvas.getActiveObject()?.isEditing) return;
-
                 if (e.ctrlKey || e.metaKey) {
                     if (e.key === 'z') { e.preventDefault(); undo(); } 
                     else if (e.key === 'y') { e.preventDefault(); redo(); }
@@ -447,22 +435,6 @@
                 }
             });
             
-             // --- The rest of the functions (handleMouseDown, addText, toggleDarkMode, etc.) remain largely the same ---
-             // Note: A full copy of the previous script's functions should be included here for a runnable file.
-             // This is a condensed representation for clarity on the new features.
-             function setTool(tool) {
-                currentTool = tool;
-                const drawingTools = ['draw', 'eraser'];
-                const shapeTools = ['rect', 'circle', 'triangle', 'line'];
-                canvas.isDrawingMode = drawingTools.includes(tool);
-                canvas.selection = tool === 'select' || shapeTools.includes(tool);
-                canvas.defaultCursor = tool === 'select' ? 'default' : 'crosshair';
-                if (tool !== 'select') { canvas.discardActiveObject().renderAll(); }
-                updateDrawingTool();
-                document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-                document.getElementById(`${tool}-tool`).classList.add('active');
-            }
-
             function updateDrawingTool() {
                 if (!canvas) return;
                 document.querySelectorAll('.pen-size-btn').forEach(btn => {
@@ -483,10 +455,10 @@
             
             function handleMouseDown(o) {
                 const shapeTools = ['rect', 'circle', 'triangle', 'line'];
-                if (!shapeTools.includes(currentTool)) return;
+                if (!shapeTools.includes(currentTool) || isDrawingShape) return;
                 isDrawingShape = true;
                 startPoint = canvas.getPointer(o.e);
-                const commonOptions = { left: startPoint.x, top: startPoint.y, originX: 'left', originY: 'top', stroke: brushColor, strokeWidth: parseInt(penSize, 10), fill: 'transparent', noScaleCache: true, };
+                const commonOptions = { left: startPoint.x, top: startPoint.y, originX: 'left', originY: 'top', stroke: brushColor, strokeWidth: parseInt(penSize, 10), fill: 'transparent', noScaleCache: true, selectable: false };
                 switch(currentTool) {
                     case 'line': shape = new fabric.Line([startPoint.x, startPoint.y, startPoint.x, startPoint.y], commonOptions); break;
                     case 'rect': shape = new fabric.Rect({ ...commonOptions, width: 0, height: 0 }); break;
@@ -515,6 +487,7 @@
             function handleMouseUp() {
                 if (!isDrawingShape || !shape) return;
                 isDrawingShape = false;
+                shape.set({ selectable: (currentTool === 'select') }); // Make it selectable if appropriate
                 shape.setCoords();
                 saveState();
                 shape = null;
@@ -547,7 +520,7 @@
                 if (currentSlide.historyIndex < currentSlide.history.length - 1) {
                     currentSlide.history = currentSlide.history.slice(0, currentSlide.historyIndex + 1);
                 }
-                currentSlide.history.push(canvas.toJSON());
+                currentSlide.history.push(canvas.toJSON(['selectable', 'isSvg']));
                 currentSlide.historyIndex++;
             }
             function undo() {
@@ -564,10 +537,7 @@
                     loadState(currentSlide.history[currentSlide.historyIndex]);
                 }
             }
-            function loadState(state) {
-                canvas.loadFromJSON(state, canvas.renderAll.bind(canvas));
-            }
-
+            
             function populateColorPalette() {
                 const palette = document.getElementById('color-palette');
                 palette.innerHTML = '';
@@ -585,8 +555,11 @@
                         const activeObjects = canvas.getActiveObjects();
                         if (activeObjects.length > 0) {
                             activeObjects.forEach(obj => {
-                                if (obj.type === 'i-text' || (obj.type === 'image' && obj.isSvg)) obj.set('fill', brushColor);
-                                else if (obj.stroke) obj.set('stroke', brushColor);
+                                if (obj.type === 'i-text' || obj.isSvg) {
+                                    obj.set('fill', brushColor);
+                                } else if (obj.stroke) {
+                                     obj.set('stroke', brushColor);
+                                }
                             });
                             canvas.renderAll();
                             saveState();
@@ -656,14 +629,14 @@
                 const canvasContainer = document.getElementById('canvas-parent');
                 const { width, height } = canvasContainer.getBoundingClientRect();
                 canvas.setDimensions({ width, height });
-                if(slides[currentSlideIndex]) loadState(slides[currentSlideIndex].data)
+                if(slides[currentSlideIndex] && slides[currentSlideIndex].data) loadState(slides[currentSlideIndex].data)
             });
 
             // --- LET'S GO ---
             if (isDarkMode) { document.documentElement.classList.add('dark'); }
             initCanvas();
             initSlides();
-            setTool('draw');
+            setTool('draw'); // Set initial tool
             populateColorPalette();
         });
     </script>

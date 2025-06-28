@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Collaborative Whiteboard</title>
-    <!-- Core Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- PDF.js for PDF import -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;</script>
-    <!-- MathJax for LaTeX rendering -->
     <script>
         MathJax = {
             tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
@@ -18,7 +15,6 @@
         };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-    <!-- UI Framework -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -52,13 +48,9 @@
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden">
-    <!-- Main App Container -->
     <div class="flex flex-col h-screen">
-        <!-- Toolbar -->
         <div class="p-2 bg-white dark:bg-gray-800 shadow-md flex items-center justify-between space-x-2 flex-wrap flex-shrink-0">
-            <!-- Left Tools -->
             <div class="flex items-center space-x-2 flex-wrap">
-                <!-- Standard tools... -->
                 <button id="select-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Select (V)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
                 <button id="draw-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 active" title="Pencil (B)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
                 <button id="eraser-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Eraser (E)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.24 7.76a4 4 0 0 0-5.66-5.66l-12 12L2 22l7.76-1.76Z"/><path d="m14 6 6 6"/><path d="M16 14H6"/></svg></button>
@@ -74,7 +66,6 @@
                 <input type="file" id="image-input" class="hidden" accept="image/*">
                 <button id="delete-tool" class="tool-btn p-2 rounded-md hover:bg-red-500 hover:text-white dark:hover:bg-red-600" title="Delete (Delete/Backspace)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
             </div>
-            <!-- Tool Settings, Right Tools etc. -->
             <div class="flex items-center space-x-2 flex-wrap border-l border-gray-300 dark:border-gray-600 pl-2 ml-2" id="tool-settings">
                  <div class="flex items-center space-x-2"><label for="pen-size" class="text-sm">Pen:</label><input type="range" id="pen-size" min="1" max="50" value="5" class="w-20" title="Pen Thickness"><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="2" title="Small Pen">S</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="5" title="Medium Pen">M</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="10" title="Large Pen">L</button></div>
                 <div class="flex items-center space-x-1"><input type="checkbox" id="stabilizer-toggle" class="w-4 h-4 rounded"><label for="stabilizer-toggle" class="text-sm cursor-pointer" title="Smooth Drawing">Stabilizer</label></div>
@@ -89,14 +80,12 @@
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-grow p-4 min-h-0">
             <div id="canvas-parent" class="w-full h-full shadow-lg rounded-lg overflow-hidden">
                 <canvas id="whiteboard-canvas"></canvas>
             </div>
         </div>
         
-        <!-- Slides -->
         <div class="p-2 bg-white dark:bg-gray-800 shadow-inner flex-shrink-0">
             <div class="flex items-center space-x-2">
                 <button id="add-slide-btn" class="p-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700" title="Add New Slide"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/></svg></button>
@@ -105,7 +94,6 @@
         </div>
     </div>
 
-    <!-- Modal for Math Input and other dialogs -->
     <div id="modal" class="modal-backdrop">
         <div class="modal-content w-full max-w-md">
             <h3 id="modal-title" class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100"></h3>
@@ -160,45 +148,27 @@
                 canvas.on('mouse:up', handleMouseUp);
             }
             
-            // --- TOOL MANAGEMENT: UPDATED FOR SELECTION FIX ---
+            // --- TOOL MANAGEMENT ---
             function setTool(tool) {
                 currentTool = tool;
                 const drawingTools = ['draw', 'eraser'];
-
-                // Set fabric.js native drawing mode for pencil/eraser
                 canvas.isDrawingMode = drawingTools.includes(tool);
-
-                // Control object selectability based on the current tool
                 canvas.forEachObject(obj => {
-                    // Objects are only selectable when the 'select' tool is active.
                     obj.selectable = (tool === 'select');
                 });
-                
-                // Allow creating a selection box only with the 'select' tool
                 canvas.selection = (tool === 'select');
-                
-                // Set the cursor style
                 canvas.defaultCursor = tool === 'select' ? 'default' : 'crosshair';
-
-                // Deselect any active object when switching away from the select tool
                 if (tool !== 'select') {
                     canvas.discardActiveObject().renderAll();
                 }
-
-                updateDrawingTool(); // Configure brush for pencil/eraser
-                
-                // Update UI button states
+                updateDrawingTool();
                 document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
                 document.getElementById(`${tool}-tool`).classList.add('active');
             }
 
-
-            // --- HISTORY (UNDO/REDO): UPDATED FOR SELECTION FIX ---
+            // --- HISTORY (UNDO/REDO) ---
             function loadState(state) {
                 canvas.loadFromJSON(state, () => {
-                    // After loading objects from history, re-apply the correct selectability
-                    // based on the currently active tool. This ensures the fix works
-                    // correctly after undo/redo or switching slides.
                     canvas.forEachObject(obj => {
                         obj.selectable = (currentTool === 'select');
                     });
@@ -224,7 +194,7 @@
 
             function saveCurrentSlideState() {
                  if (currentSlideIndex > -1 && slides[currentSlideIndex]) {
-                    slides[currentSlideIndex].data = canvas.toJSON();
+                    slides[currentSlideIndex].data = canvas.toJSON(['selectable', 'isSvg']);
                 }
             }
 
@@ -233,13 +203,8 @@
                 saveCurrentSlideState();
                 currentSlideIndex = index;
                 const slide = slides[currentSlideIndex];
-                
-                // The loadState function now handles setting selectability
                 loadState(slide.data);
-
-                // Ensure background color is set correctly on switch
                 canvas.setBackgroundColor(slide.data.background, canvas.renderAll.bind(canvas));
-                
                 if (slide.history.length === 0) { saveState(); }
                 renderSlideThumbnails();
             }
@@ -262,21 +227,15 @@
                     thumb.className = `slide-thumb relative w-24 h-16 bg-white dark:bg-gray-700 border-2 rounded-md cursor-pointer flex-shrink-0 ${index === currentSlideIndex ? 'active' : 'border-transparent'}`;
                     thumb.title = `Slide ${index + 1}`;
                     thumb.innerHTML = `<span class="absolute top-1 left-2 text-sm text-gray-500 dark:text-gray-400">${index + 1}</span>`;
-
                     const deleteBtn = document.createElement('button');
                     deleteBtn.innerHTML = '&times;';
                     deleteBtn.className = 'absolute top-0 right-0 p-1 text-red-500 hover:text-red-700';
                     deleteBtn.onclick = (e) => { e.stopPropagation(); deleteSlide(index); };
                     thumb.appendChild(deleteBtn);
-                    
                     thumb.onclick = () => switchSlide(index);
                     container.appendChild(thumb);
                 });
             }
-
-            // --- The rest of the script is here ---
-            // The following functions are unchanged from the previous version.
-            // They include modal dialogs, MathJax, PDF import, color palettes, etc.
             
             function showModal(title, body, footer) {
                 document.getElementById('modal-title').innerHTML = title;
@@ -309,6 +268,7 @@
                 document.getElementById('latex-input').focus();
             }
 
+            // --- CORRECTED MATHJAX RENDERING ---
             function insertMath() {
                 const latex = document.getElementById('latex-input').value;
                 if (!latex.trim()) return;
@@ -317,7 +277,12 @@
                 MathJax.tex2svgPromise(latex, { display: true }).then((node) => {
                     const svgNode = node.querySelector('svg');
                     svgNode.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                    svgNode.style.color = brushColor; 
+                    
+                    // FIX: Set fill color on all paths within the SVG
+                    svgNode.querySelectorAll('path').forEach(path => {
+                        path.setAttribute('fill', brushColor);
+                    });
+
                     const svgData = new XMLSerializer().serializeToString(svgNode);
                     const dataUrl = 'data:image/svg+xml;base64,' + window.btoa(svgData);
                     fabric.Image.fromURL(dataUrl, (img) => {
@@ -487,7 +452,7 @@
             function handleMouseUp() {
                 if (!isDrawingShape || !shape) return;
                 isDrawingShape = false;
-                shape.set({ selectable: (currentTool === 'select') }); // Make it selectable if appropriate
+                shape.set({ selectable: (currentTool === 'select') });
                 shape.setCoords();
                 saveState();
                 shape = null;
@@ -560,6 +525,9 @@
                                 } else if (obj.stroke) {
                                      obj.set('stroke', brushColor);
                                 }
+                                if(obj.isSvg){
+                                     obj.getObjects().forEach(o => o.set('fill', brushColor));
+                                }
                             });
                             canvas.renderAll();
                             saveState();
@@ -569,9 +537,11 @@
                 });
             }
             
+            // --- CORRECTED DARK MODE TOGGLE ---
             function toggleDarkMode() {
                 isDarkMode = !isDarkMode;
                 document.documentElement.classList.toggle('dark', isDarkMode);
+                
                 const fromColors = isDarkMode ? lightColors : darkColors;
                 const toColors = isDarkMode ? darkColors : lightColors;
                 const colorMap = {};
@@ -579,29 +549,61 @@
                     colorMap[new fabric.Color(color).toHex().toLowerCase()] = toColors[index];
                 });
 
-                canvas.getObjects().forEach(obj => {
-                    const processColor = (prop) => {
-                        const currentColor = obj.get(prop);
-                        if (currentColor && typeof currentColor === 'string') {
-                            const normalizedColor = new fabric.Color(currentColor).toHex().toLowerCase();
-                            if (colorMap[normalizedColor]) { obj.set(prop, colorMap[normalizedColor]); }
+                const newBgColor = isDarkMode ? '#1f2937' : '#ffffff';
+
+                // FIX: Iterate through ALL slides and update their object colors
+                slides.forEach(slide => {
+                    if (!slide.data || !slide.data.objects) return;
+                    
+                    slide.data.background = newBgColor; // Update background color for each slide
+                    
+                    slide.data.objects.forEach(obj => {
+                        // Logic to swap colors for an object
+                        const swapColor = (colorValue) => {
+                            if (!colorValue || typeof colorValue !== 'string' || colorValue === 'transparent') {
+                                return colorValue; // Don't change transparent or non-string colors
+                            }
+                            const normalizedColor = new fabric.Color(colorValue).toHex().toLowerCase();
+                            return colorMap[normalizedColor] || colorValue;
+                        };
+
+                        // Process stroke color
+                        if (obj.stroke) {
+                            obj.stroke = swapColor(obj.stroke);
                         }
-                    };
-                    processColor('stroke');
-                    processColor('fill');
+
+                        // Process fill color (with more care)
+                        if (obj.isSvg || obj.type === 'i-text' || obj.type === 'text') {
+                             obj.fill = swapColor(obj.fill);
+                        } else if (obj.fill && obj.fill !== 'transparent') {
+                            // Only change fill on other shapes if it's not transparent
+                            obj.fill = swapColor(obj.fill);
+                        }
+                        
+                        // Handle grouped SVG objects (like mathjax output)
+                        if (obj.isSvg && obj._objects) {
+                            obj._objects.forEach(o => o.set('fill', swapColor(o.fill)));
+                        }
+                    });
                 });
                 
+                // Update brush color
                 const normalizedBrushColor = new fabric.Color(brushColor).toHex().toLowerCase();
-                if (colorMap[normalizedBrushColor]) { brushColor = colorMap[normalizedBrushColor]; }
+                if (colorMap[normalizedBrushColor]) {
+                    brushColor = colorMap[normalizedBrushColor];
+                }
 
-                const newBgColor = isDarkMode ? '#1f2937' : '#ffffff';
-                canvas.setBackgroundColor(newBgColor, canvas.renderAll.bind(canvas));
-                slides.forEach(slide => { if(slide.data) slide.data.background = newBgColor; });
+                // Refresh UI
                 populateColorPalette();
                 updateDrawingTool();
+                
+                // Reload the current slide to show changes
+                loadState(slides[currentSlideIndex].data);
+                canvas.setBackgroundColor(newBgColor, canvas.renderAll.bind(canvas));
+                
                 saveState();
             }
-            
+
             async function exportToPDF() {
                 const { jsPDF } = window.jspdf;
                 saveCurrentSlideState();

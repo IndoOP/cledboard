@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Collaborative Whiteboard</title>
+    <!-- Core Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- PDF.js for PDF import -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;</script>
+    <!-- MathJax for LaTeX rendering -->
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <!-- UI Framework -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; }
+        .canvas-container { border-radius: 0.5rem; }
+        .tool-btn, .color-btn, .slide-thumb, .pen-size-btn { transition: all 0.2s ease-in-out; }
+        .tool-btn.active, .pen-size-btn.active { background-color: #3b82f6; color: white; }
+        .color-btn.active { box-shadow: 0 0 0 3px #3b82f6; }
+        .dark .tool-btn.active, .dark .pen-size-btn.active { background-color: #60a5fa; color: #1f2937; }
+        .dark .color-btn.active { box-shadow: 0 0 0 3px #60a5fa; }
+        #slide-container::-webkit-scrollbar { height: 8px; }
+        #slide-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark #slide-container::-webkit-scrollbar-thumb { background: #475569; }
+        .slide-thumb.active { border-color: #3b82f6; }
+        .dark .slide-thumb.active { border-color: #60a5fa; }
+        #stabilizer-toggle { accent-color: #3b82f6; }
+        /* Modal Styles */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-backdrop.visible { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background-color: white; border-radius: 0.5rem; padding: 1.5rem;
+            transform: scale(0.95); transition: transform 0.3s ease;
+        }
+        .dark .modal-content { background-color: #1f2937; } /* bg-gray-800 */
+        .modal-backdrop.visible .modal-content { transform: scale(1); }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden">
+    <!-- Main App Container -->
+    <div class="flex flex-col h-screen">
+        <!-- Toolbar -->
+        <div class="p-2 bg-white dark:bg-gray-800 shadow-md flex items-center justify-between space-x-2 flex-wrap flex-shrink-0">
+            <!-- Left Tools -->
+            <div class="flex items-center space-x-2 flex-wrap">
+                <!-- Standard tools... -->
+                <button id="select-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Select (V)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
+                <button id="draw-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 active" title="Pencil (B)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+                <button id="eraser-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Eraser (E)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.24 7.76a4 4 0 0 0-5.66-5.66l-12 12L2 22l7.76-1.76Z"/><path d="m14 6 6 6"/><path d="M16 14H6"/></svg></button>
+                <button id="line-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Line (L)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/></svg></button>
+                <button id="rect-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Rectangle (R)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg></button>
+                <button id="circle-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Circle (C)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg></button>
+                <button id="triangle-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Triangle"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/></svg></button>
+                <button id="text-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Add Text (T)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/></svg></button>
+                
+                <!-- NEW: Math Tool -->
+                <button id="math-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Insert Math (M)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.59c-5.83-3.2-9.59-8.4-9.59-14.23 0-2.07.83-3.96 2.2-5.36 2.37-2.37 6.25-2.37 8.62 0l.98.98.98-.98c2.37-2.37 6.25-2.37 8.62 0 1.37 1.39 2.2 3.29 2.2 5.36 0 5.83-3.76 11.03-9.59 14.23Z"/><path d="M12 13V7h-2"/><path d="M12 7h2"/></svg>
+                </button>
+                <!-- NEW: PDF Import Tool -->
+                <button id="pdf-import-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Import PDF">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><path d="M14 2v6h6"/><path d="M2 15.5v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2z"/></svg>
+                </button>
+                <input type="file" id="pdf-input" class="hidden" accept="application/pdf">
+
+                <button id="image-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Add Image (I)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></button>
+                <input type="file" id="image-input" class="hidden" accept="image/*">
+                <button id="delete-tool" class="tool-btn p-2 rounded-md hover:bg-red-500 hover:text-white dark:hover:bg-red-600" title="Delete (Delete/Backspace)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            </div>
+            <!-- Tool Settings, Right Tools etc. -->
+            <div class="flex items-center space-x-2 flex-wrap border-l border-gray-300 dark:border-gray-600 pl-2 ml-2" id="tool-settings">
+                 <div class="flex items-center space-x-2"><label for="pen-size" class="text-sm">Pen:</label><input type="range" id="pen-size" min="1" max="50" value="5" class="w-20" title="Pen Thickness"><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="2" title="Small Pen">S</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="5" title="Medium Pen">M</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="10" title="Large Pen">L</button></div>
+                <div class="flex items-center space-x-1"><input type="checkbox" id="stabilizer-toggle" class="w-4 h-4 rounded"><label for="stabilizer-toggle" class="text-sm cursor-pointer" title="Smooth Drawing">Stabilizer</label></div>
+                <div class="flex items-center space-x-2"><label for="eraser-size" class="text-sm">Eraser:</label><input type="range" id="eraser-size" min="1" max="100" value="20" class="w-20" title="Eraser Thickness"></div>
+                <div class="flex items-center space-x-2" id="color-palette"></div>
+            </div>
+            <div class="flex items-center space-x-2 flex-wrap">
+                <button id="undo-btn" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Undo (Ctrl+Z)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 14H6.5a3.5 3.5 0 1 1 0-7H15"/><path d="m9 17-3-3 3-3"/></svg></button>
+                <button id="redo-btn" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Redo (Ctrl+Y)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h14.5a3.5 3.5 0 1 0 0-7H8"/><path d="m15 17 3-3-3-3"/></svg></button>
+                <button id="export-pdf-btn" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Export as PDF"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 12v6"/><path d="m13 15-3 3-3-3"/></svg></button>
+                <button id="dark-mode-toggle" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Dark Mode"><svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="block dark:hidden"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden dark:block"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-grow p-4 min-h-0">
+            <div id="canvas-parent" class="w-full h-full shadow-lg rounded-lg overflow-hidden">
+                <canvas id="whiteboard-canvas"></canvas>
+            </div>
+        </div>
+        
+        <!-- Slides -->
+        <div class="p-2 bg-white dark:bg-gray-800 shadow-inner flex-shrink-0">
+            <div class="flex items-center space-x-2">
+                <button id="add-slide-btn" class="p-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700" title="Add New Slide"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/></svg></button>
+                 <div id="slide-container" class="flex-grow flex items-center space-x-2 overflow-x-auto p-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Modal for Math Input and other dialogs -->
+    <div id="modal" class="modal-backdrop">
+        <div class="modal-content w-full max-w-md">
+            <h3 id="modal-title" class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100"></h3>
+            <div id="modal-body" class="mt-2"></div>
+            <div id="modal-footer" class="mt-4 flex justify-end space-x-2"></div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- STATE MANAGEMENT ---
+            let canvas;
+            let currentTool = 'draw';
+            let brushColor = '#000000';
+            let penSize = 5;
+            let eraserSize = 20;
+            let useStabilizer = false;
+
+            let slides = [];
+            let currentSlideIndex = -1;
+            let isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            let isDrawingShape = false;
+            let shape, startPoint;
+
+            const lightColors = ['#000000', '#EF4444', '#F97316', '#EAB308', '#22C55E', '#3B82F6', '#8B5CF6'];
+            const darkColors =  ['#FFFFFF', '#FCA5A5', '#FDBA74', '#FDE047', '#86EFAC', '#93C5FD', '#C4B5FD'];
+
+            // --- INITIALIZATION ---
+            function initCanvas() {
+                const canvasEl = document.getElementById('whiteboard-canvas');
+                const canvasContainer = document.getElementById('canvas-parent');
+                const { width, height } = canvasContainer.getBoundingClientRect();
+                canvasEl.width = width;
+                canvasEl.height = height;
+
+                canvas = new fabric.Canvas(canvasEl, {
+                    isDrawingMode: true,
+                    backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+                    selection: true,
+                });
+
+                updateDrawingTool();
+                setupEventListeners();
+            }
+            
+            function setupEventListeners() {
+                canvas.on('path:created', saveState);
+                canvas.on('object:modified', saveState);
+                canvas.on('mouse:down', handleMouseDown);
+                canvas.on('mouse:move', handleMouseMove);
+                canvas.on('mouse:up', handleMouseUp);
+            }
+            
+            // --- SLIDE MANAGEMENT ---
+            function initSlides() { addSlide(); }
+
+            function addSlide(data = null) {
+                const newSlideData = {
+                    history: [],
+                    historyIndex: -1,
+                    data: data || { objects: [], background: isDarkMode ? '#1f2937' : '#ffffff' }
+                };
+                slides.push(newSlideData);
+                // If it's the first slide, or if we are adding a slide for PDF import, switch to it.
+                if (slides.length === 1 || data) {
+                     switchSlide(slides.length - 1);
+                }
+                renderSlideThumbnails();
+            }
+
+            function saveCurrentSlideState() {
+                 if (slides[currentSlideIndex]) {
+                    slides[currentSlideIndex].data = canvas.toJSON();
+                }
+            }
+
+            function switchSlide(index) {
+                if (index < 0 || index >= slides.length || (index === currentSlideIndex && canvas)) return;
+                saveCurrentSlideState();
+                currentSlideIndex = index;
+                const slide = slides[currentSlideIndex];
+                canvas.loadFromJSON(slide.data, () => {
+                     // Ensure background color is correctly set
+                     canvas.setBackgroundColor(slide.data.background, canvas.renderAll.bind(canvas));
+                     if (slide.history.length === 0) { saveState(); }
+                });
+                renderSlideThumbnails();
+            }
+
+            function deleteSlide(index) {
+                if (slides.length <= 1) return;
+                slides.splice(index, 1);
+                if (currentSlideIndex >= index) {
+                    currentSlideIndex = Math.max(0, currentSlideIndex - 1);
+                }
+                switchSlide(currentSlideIndex);
+                renderSlideThumbnails();
+            }
+
+            function renderSlideThumbnails() {
+                const container = document.getElementById('slide-container');
+                container.innerHTML = '';
+                slides.forEach((slide, index) => {
+                    const thumb = document.createElement('div');
+                    thumb.className = `slide-thumb relative w-24 h-16 bg-white dark:bg-gray-700 border-2 rounded-md cursor-pointer flex-shrink-0 ${index === currentSlideIndex ? 'active' : 'border-transparent'}`;
+                    thumb.title = `Slide ${index + 1}`;
+                    thumb.innerHTML = `<span class="absolute top-1 left-2 text-sm text-gray-500 dark:text-gray-400">${index + 1}</span>`;
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.innerHTML = '&times;';
+                    deleteBtn.className = 'absolute top-0 right-0 p-1 text-red-500 hover:text-red-700';
+                    deleteBtn.onclick = (e) => { e.stopPropagation(); deleteSlide(index); };
+                    thumb.appendChild(deleteBtn);
+                    
+                    thumb.onclick = () => switchSlide(index);
+                    container.appendChild(thumb);
+                });
+            }
+
+            // --- MODAL DIALOG ---
+            function showModal(title, body, footer) {
+                document.getElementById('modal-title').innerHTML = title;
+                document.getElementById('modal-body').innerHTML = body;
+                document.getElementById('modal-footer').innerHTML = '';
+                if(footer) document.getElementById('modal-footer').appendChild(footer);
+
+                document.getElementById('modal').classList.add('visible');
+            }
+
+            function hideModal() {
+                document.getElementById('modal').classList.remove('visible');
+            }
+
+            // --- NEW: MATHJAX INTEGRATION ---
+            function showMathModal() {
+                const title = "Insert Mathematical Expression (LaTeX)";
+                const body = `<textarea id="latex-input" class="w-full h-24 p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-gray-200" placeholder="e.g., \\\\frac{-b \\\\pm \\\\sqrt{b^2-4ac}}{2a}"></textarea>`;
+                
+                const footer = document.createElement('div');
+                footer.className = 'flex justify-end space-x-2';
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.className = 'px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500';
+                cancelBtn.onclick = hideModal;
+
+                const insertBtn = document.createElement('button');
+                insertBtn.textContent = 'Insert';
+                insertBtn.className = 'px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600';
+                insertBtn.onclick = insertMath;
+
+                footer.appendChild(cancelBtn);
+                footer.appendChild(insertBtn);
+
+                showModal(title, body, footer);
+                document.getElementById('latex-input').focus();
+            }
+
+            function insertMath() {
+                const latex = document.getElementById('latex-input').value;
+                if (!latex.trim()) return;
+
+                // Temporarily show a loading message in the modal
+                document.getElementById('modal-body').innerHTML = '<p>Rendering equation...</p>';
+                document.getElementById('modal-footer').innerHTML = '';
+
+
+                MathJax.tex2svgPromise(latex, { display: true }).then((node) => {
+                    const svgNode = node.querySelector('svg');
+                    svgNode.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                    // Use the current brush color for the math expression
+                    svgNode.style.color = brushColor; 
+                    
+                    const svgData = new XMLSerializer().serializeToString(svgNode);
+                    const dataUrl = 'data:image/svg+xml;base64,' + window.btoa(svgData);
+
+                    fabric.Image.fromURL(dataUrl, (img) => {
+                        img.set({
+                            left: canvas.width / 2,
+                            top: canvas.height / 2,
+                            originX: 'center',
+                            originY: 'center'
+                        });
+                        canvas.add(img).setActiveObject(img).renderAll();
+                        saveState();
+                        hideModal();
+                    });
+                }).catch((err) => {
+                     // On error, show message and restore buttons
+                    showMathModal();
+                    document.getElementById('modal-body').insertAdjacentHTML('beforeend', `<p class="text-red-500 mt-2">Error: ${err.message}</p>`);
+                });
+            }
+
+
+            // --- NEW: PDF IMPORT ---
+            async function importPDF(file) {
+                const fileReader = new FileReader();
+
+                fileReader.onload = async function() {
+                    const typedarray = new Uint8Array(this.result);
+                    
+                    showModal('Importing PDF', '<p id="pdf-progress">Loading PDF...</p>', null);
+
+                    try {
+                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                        const numPages = pdf.numPages;
+                        document.getElementById('pdf-progress').textContent = `Importing ${numPages} pages...`;
+
+                        // Add a new slide for each page of the PDF
+                        for (let i = 1; i <= numPages; i++) {
+                             document.getElementById('pdf-progress').textContent = `Processing page ${i} of ${numPages}...`;
+                            const page = await pdf.getPage(i);
+                            const viewport = page.getViewport({ scale: 1.5 });
+
+                            const pdfCanvas = document.createElement('canvas');
+                            const context = pdfCanvas.getContext('2d');
+                            pdfCanvas.height = viewport.height;
+                            pdfCanvas.width = viewport.width;
+
+                            await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                            const imgData = pdfCanvas.toDataURL('image/png');
+                            
+                            // Create a new slide and set its background
+                            const slideData = {
+                                version: fabric.version,
+                                objects: [], // Start with a blank page of objects
+                                backgroundImage: {
+                                    type: 'image',
+                                    src: imgData,
+                                    // Make the background image fit the canvas dimensions
+                                    scaleX: canvas.width / viewport.width,
+                                    scaleY: canvas.height / viewport.height,
+                                },
+                                background: isDarkMode ? '#1f2937' : '#ffffff'
+                            };
+
+                            // Add a new slide with the PDF page as the background
+                            addSlide(slideData);
+                        }
+                        
+                        // Switch to the first of the newly imported slides
+                        switchSlide(slides.length - numPages);
+                        hideModal();
+
+                    } catch(err) {
+                        showModal('Error', `<p class="text-red-500">Could not import PDF: ${err.message}</p>`, null);
+                        setTimeout(hideModal, 3000);
+                    }
+                };
+                fileReader.readAsArrayBuffer(file);
+            }
+            
+            // --- EVENT LISTENERS BINDING---
+            // ... (All previous tool event listeners are here)
+            document.getElementById('select-tool').onclick = () => setTool('select');
+            document.getElementById('draw-tool').onclick = () => setTool('draw');
+            document.getElementById('eraser-tool').onclick = () => setTool('eraser');
+            document.getElementById('line-tool').onclick = () => setTool('line');
+            document.getElementById('rect-tool').onclick = () => setTool('rect');
+            document.getElementById('circle-tool').onclick = () => setTool('circle');
+            document.getElementById('triangle-tool').onclick = () => setTool('triangle');
+            document.getElementById('text-tool').onclick = () => addText();
+            document.getElementById('image-tool').onclick = () => document.getElementById('image-input').click();
+            document.getElementById('image-input').onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => addImage(event.target.result);
+                    reader.readAsDataURL(file);
+                }
+            };
+            document.getElementById('delete-tool').onclick = deleteSelected;
+            document.getElementById('undo-btn').onclick = undo;
+            document.getElementById('redo-btn').onclick = redo;
+            document.getElementById('export-pdf-btn').onclick = exportToPDF;
+            document.getElementById('dark-mode-toggle').onclick = toggleDarkMode;
+            document.getElementById('add-slide-btn').onclick = () => addSlide();
+            // New Listeners
+            document.getElementById('math-tool').onclick = showMathModal;
+            document.getElementById('pdf-import-tool').onclick = () => document.getElementById('pdf-input').click();
+            document.getElementById('pdf-input').onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) { importPDF(file); }
+                 e.target.value = null; // Reset input so same file can be re-uploaded
+            };
+
+            document.getElementById('modal').onclick = (e) => {
+                if (e.target.id === 'modal') hideModal();
+            };
+            
+            // Tool Settings Listeners
+            document.getElementById('pen-size').oninput = (e) => { penSize = e.target.value; updateDrawingTool(); };
+            document.getElementById('eraser-size').oninput = (e) => { eraserSize = e.target.value; updateDrawingTool(); };
+            document.querySelectorAll('.pen-size-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    penSize = e.currentTarget.dataset.size;
+                    document.getElementById('pen-size').value = penSize;
+                    updateDrawingTool();
+                };
+            });
+            document.getElementById('stabilizer-toggle').onchange = (e) => { useStabilizer = e.target.checked; updateDrawingTool(); };
+
+            // Keyboard shortcuts
+            window.addEventListener('keydown', (e) => {
+                 if (document.getElementById('modal').classList.contains('visible')) {
+                    if (e.key === 'Escape') hideModal();
+                    if (e.key === 'Enter' && document.getElementById('latex-input')) insertMath();
+                    return;
+                }
+                if (canvas.getActiveObject()?.isEditing) return;
+
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 'z') { e.preventDefault(); undo(); } 
+                    else if (e.key === 'y') { e.preventDefault(); redo(); }
+                } else {
+                    switch (e.key.toLowerCase()) {
+                        case 'b': setTool('draw'); break;
+                        case 'e': setTool('eraser'); break;
+                        case 'v': setTool('select'); break;
+                        case 'l': setTool('line'); break;
+                        case 'r': setTool('rect'); break;
+                        case 'c': setTool('circle'); break;
+                        case 't': addText(); break;
+                        case 'm': showMathModal(); break;
+                        case 'i': document.getElementById('image-input').click(); break;
+                        case 'delete': case 'backspace': deleteSelected(); break;
+                    }
+                }
+            });
+            
+             // --- The rest of the functions (handleMouseDown, addText, toggleDarkMode, etc.) remain largely the same ---
+             // Note: A full copy of the previous script's functions should be included here for a runnable file.
+             // This is a condensed representation for clarity on the new features.
+             function setTool(tool) {
+                currentTool = tool;
+                const drawingTools = ['draw', 'eraser'];
+                const shapeTools = ['rect', 'circle', 'triangle', 'line'];
+                canvas.isDrawingMode = drawingTools.includes(tool);
+                canvas.selection = tool === 'select' || shapeTools.includes(tool);
+                canvas.defaultCursor = tool === 'select' ? 'default' : 'crosshair';
+                if (tool !== 'select') { canvas.discardActiveObject().renderAll(); }
+                updateDrawingTool();
+                document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(`${tool}-tool`).classList.add('active');
+            }
+
+            function updateDrawingTool() {
+                if (!canvas) return;
+                document.querySelectorAll('.pen-size-btn').forEach(btn => {
+                    btn.classList.toggle('active', parseInt(btn.dataset.size) === parseInt(penSize));
+                });
+                if (currentTool === 'draw') {
+                    const brush = canvas.freeDrawingBrush;
+                    brush.color = brushColor;
+                    brush.width = parseInt(penSize, 10);
+                    brush.decimate = useStabilizer ? 8 : 0;
+                } else if (currentTool === 'eraser') {
+                    const brush = canvas.freeDrawingBrush;
+                    brush.color = isDarkMode ? '#1f2937' : '#ffffff';
+                    brush.width = parseInt(eraserSize, 10);
+                    brush.decimate = 0;
+                }
+            }
+            
+            function handleMouseDown(o) {
+                const shapeTools = ['rect', 'circle', 'triangle', 'line'];
+                if (!shapeTools.includes(currentTool)) return;
+                isDrawingShape = true;
+                startPoint = canvas.getPointer(o.e);
+                const commonOptions = { left: startPoint.x, top: startPoint.y, originX: 'left', originY: 'top', stroke: brushColor, strokeWidth: parseInt(penSize, 10), fill: 'transparent', noScaleCache: true, };
+                switch(currentTool) {
+                    case 'line': shape = new fabric.Line([startPoint.x, startPoint.y, startPoint.x, startPoint.y], commonOptions); break;
+                    case 'rect': shape = new fabric.Rect({ ...commonOptions, width: 0, height: 0 }); break;
+                    case 'circle': shape = new fabric.Ellipse({ ...commonOptions, rx: 0, ry: 0 }); break;
+                    case 'triangle': shape = new fabric.Triangle({ ...commonOptions, width: 0, height: 0 }); break;
+                }
+                canvas.add(shape);
+            }
+
+            function handleMouseMove(o) {
+                if (!isDrawingShape || !shape) return;
+                const pointer = canvas.getPointer(o.e);
+                if(currentTool === 'line') {
+                    shape.set({ x2: pointer.x, y2: pointer.y });
+                } else {
+                    let width = pointer.x - startPoint.x;
+                    let height = pointer.y - startPoint.y;
+                    shape.set({ width: Math.abs(width), height: Math.abs(height), originX: width > 0 ? 'left' : 'right', originY: height > 0 ? 'top' : 'bottom' });
+                    if (currentTool === 'circle') {
+                        shape.set({ rx: Math.abs(width) / 2, ry: Math.abs(height) / 2 });
+                    }
+                }
+                canvas.renderAll();
+            }
+
+            function handleMouseUp() {
+                if (!isDrawingShape || !shape) return;
+                isDrawingShape = false;
+                shape.setCoords();
+                saveState();
+                shape = null;
+            }
+
+            function addText() {
+                setTool('select');
+                const text = new fabric.IText('Double-click to edit', { left: canvas.width / 2 - 100, top: canvas.height / 2 - 20, fill: brushColor, fontSize: 20, fontFamily: 'Inter', padding: 5, });
+                canvas.add(text).setActiveObject(text).renderAll();
+                saveState();
+            }
+            function addImage(url) {
+                setTool('select');
+                fabric.Image.fromURL(url, (img) => {
+                    img.scaleToWidth(200);
+                    img.set({ left: canvas.width / 2 - 100, top: canvas.height / 2 - 100, cornerColor: 'blue', cornerSize: 8, transparentCorners: false });
+                    canvas.add(img).setActiveObject(img).renderAll();
+                    saveState();
+                }, { crossOrigin: 'anonymous' });
+            }
+            function deleteSelected() {
+                 canvas.getActiveObjects().forEach(obj => canvas.remove(obj));
+                 canvas.discardActiveObject().renderAll();
+                 saveState();
+            }
+
+            function saveState() {
+                const currentSlide = slides[currentSlideIndex];
+                if (!currentSlide) return;
+                if (currentSlide.historyIndex < currentSlide.history.length - 1) {
+                    currentSlide.history = currentSlide.history.slice(0, currentSlide.historyIndex + 1);
+                }
+                currentSlide.history.push(canvas.toJSON());
+                currentSlide.historyIndex++;
+            }
+            function undo() {
+                const currentSlide = slides[currentSlideIndex];
+                if (currentSlide.historyIndex > 0) {
+                    currentSlide.historyIndex--;
+                    loadState(currentSlide.history[currentSlide.historyIndex]);
+                }
+            }
+            function redo() {
+                const currentSlide = slides[currentSlideIndex];
+                if (currentSlide.historyIndex < currentSlide.history.length - 1) {
+                    currentSlide.historyIndex++;
+                    loadState(currentSlide.history[currentSlide.historyIndex]);
+                }
+            }
+            function loadState(state) {
+                canvas.loadFromJSON(state, canvas.renderAll.bind(canvas));
+            }
+
+            function populateColorPalette() {
+                const palette = document.getElementById('color-palette');
+                palette.innerHTML = '';
+                const colors = isDarkMode ? darkColors : lightColors;
+                colors.forEach(color => {
+                    const btn = document.createElement('button');
+                    const normalizedBrushColor = new fabric.Color(brushColor).toHex().toLowerCase();
+                    const normalizedBtnColor = new fabric.Color(color).toHex().toLowerCase();
+                    btn.className = `color-btn w-6 h-6 rounded-full border-2 border-transparent ${normalizedBtnColor === normalizedBrushColor ? 'active' : ''}`;
+                    btn.style.backgroundColor = color;
+                    btn.onclick = () => {
+                        brushColor = color;
+                        updateDrawingTool();
+                        populateColorPalette();
+                        const activeObjects = canvas.getActiveObjects();
+                        if (activeObjects.length > 0) {
+                            activeObjects.forEach(obj => {
+                                if (obj.type === 'i-text' || (obj.type === 'image' && obj.isSvg)) obj.set('fill', brushColor);
+                                else if (obj.stroke) obj.set('stroke', brushColor);
+                            });
+                            canvas.renderAll();
+                            saveState();
+                        }
+                    };
+                    palette.appendChild(btn);
+                });
+            }
+            
+            function toggleDarkMode() {
+                isDarkMode = !isDarkMode;
+                document.documentElement.classList.toggle('dark', isDarkMode);
+                const fromColors = isDarkMode ? lightColors : darkColors;
+                const toColors = isDarkMode ? darkColors : lightColors;
+                const colorMap = {};
+                fromColors.forEach((color, index) => {
+                    colorMap[new fabric.Color(color).toHex().toLowerCase()] = toColors[index];
+                });
+
+                canvas.getObjects().forEach(obj => {
+                    const processColor = (prop) => {
+                        const currentColor = obj.get(prop);
+                        if (currentColor && typeof currentColor === 'string') {
+                            const normalizedColor = new fabric.Color(currentColor).toHex().toLowerCase();
+                            if (colorMap[normalizedColor]) { obj.set(prop, colorMap[normalizedColor]); }
+                        }
+                    };
+                    processColor('stroke');
+                    processColor('fill');
+                });
+                
+                const normalizedBrushColor = new fabric.Color(brushColor).toHex().toLowerCase();
+                if (colorMap[normalizedBrushColor]) { brushColor = colorMap[normalizedBrushColor]; }
+
+                const newBgColor = isDarkMode ? '#1f2937' : '#ffffff';
+                canvas.setBackgroundColor(newBgColor, canvas.renderAll.bind(canvas));
+                slides.forEach(slide => { if(slide.data) slide.data.background = newBgColor; });
+                populateColorPalette();
+                updateDrawingTool();
+                saveState();
+            }
+            
+            async function exportToPDF() {
+                const { jsPDF } = window.jspdf;
+                saveCurrentSlideState();
+                const { width, height } = canvas;
+                const doc = new jsPDF({ orientation: width > height ? 'landscape' : 'portrait', unit: 'px', format: [width, height] });
+                for (let i = 0; i < slides.length; i++) {
+                    const slideData = slides[i].data;
+                    const tempCanvas = new fabric.StaticCanvas(null, { width, height });
+                    await new Promise(resolve => {
+                       tempCanvas.loadFromJSON(slideData, () => {
+                           tempCanvas.renderAll();
+                           const imgData = tempCanvas.toDataURL({ format: 'jpeg', quality: 0.7 });
+                           if (i > 0) { doc.addPage([width, height], width > height ? 'landscape' : 'portrait'); }
+                           doc.addImage(imgData, 'JPEG', 0, 0, width, height, undefined, 'FAST');
+                           tempCanvas.dispose();
+                           resolve();
+                       });
+                    });
+                }
+                doc.save('whiteboard_export.pdf');
+            }
+            
+            window.addEventListener('resize', () => {
+                saveCurrentSlideState();
+                const canvasContainer = document.getElementById('canvas-parent');
+                const { width, height } = canvasContainer.getBoundingClientRect();
+                canvas.setDimensions({ width, height });
+                if(slides[currentSlideIndex]) loadState(slides[currentSlideIndex].data)
+            });
+
+            // --- LET'S GO ---
+            if (isDarkMode) { document.documentElement.classList.add('dark'); }
+            initCanvas();
+            initSlides();
+            setTool('draw');
+            populateColorPalette();
+        });
+    </script>
+</body>
+</html>

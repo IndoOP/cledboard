@@ -709,6 +709,7 @@
                 });
             }
             
+            // --- UPDATED FUNCTION ---
             async function toggleDarkMode() {
                 saveCurrentSlideState();
                 isDarkMode = !isDarkMode;
@@ -755,14 +756,27 @@
                                     processColor('stroke');
                                 }
                             });
+                            // Update the slide's main data object
                             slide.data = tempCanvas.toJSON(customProps);
                             slide.data.background = isDarkMode ? '#1f2937' : '#ffffff';
+
+                            // Also update the current state in the history to make undo work correctly
+                            if (slide.historyIndex > -1 && slide.history[slide.historyIndex]) {
+                                slide.history[slide.historyIndex] = slide.data;
+                            }
                             resolve();
                         });
                     });
                 }
                 tempCanvas.dispose();
-                switchSlide(currentSlideIndex);
+
+                // FIX: Manually reload the current slide since switchSlide() would bail out.
+                const currentSlide = slides[currentSlideIndex];
+                if (currentSlide) {
+                    loadState(currentSlide.data);
+                    canvas.setBackgroundColor(currentSlide.data.background, canvas.renderAll.bind(canvas));
+                }
+                
                 populateColorPalette();
                 updateDrawingTool();
                 hideModal();

@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="shortcut icon" href="fav.png" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Collaborative Whiteboard</title>
+    <title>CledBoard</title>
     <!-- Core Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -83,7 +84,7 @@
             </div>
              <!-- Tool Settings -->
             <div class="flex items-center space-x-2 flex-wrap border-l border-gray-300 dark:border-gray-600 pl-2 ml-2" id="tool-settings">
-                 <div class="flex items-center space-x-2"><label for="pen-size" class="text-sm">Pen:</label><input type="range" id="pen-size" min="1" max="50" value="5" class="w-20" title="Pen Thickness"><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="2" title="Small Pen">S</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="5" title="Medium Pen">M</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="10" title="Large Pen">L</button></div>
+                 <div class="flex items-center space-x-2"><label for="pen-size" class="text-sm">Pen:</label><input type="range" id="pen-size" min="1" max="50" value="5" class="w-20" title="Pen Thickness"><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="3.5" title="Small Pen">S</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="5" title="Medium Pen">M</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="10" title="Large Pen">L</button></div>
                 <div class="flex items-center space-x-1"><input type="checkbox" id="stabilizer-toggle" class="w-4 h-4 rounded"><label for="stabilizer-toggle" class="text-sm cursor-pointer" title="Smooth Drawing">Stabilizer</label><input type="range" id="stabilizer-strength" min="1" max="30" value="8" class="w-20 ml-2 hidden" title="Stabilizer Strength"></div>
                 <div class="flex items-center space-x-2"><label for="eraser-size" class="text-sm">Eraser:</label><input type="range" id="eraser-size" min="1" max="100" value="20" class="w-20" title="Eraser Thickness"></div>
                 <div class="flex items-center space-x-2" id="color-palette"></div>
@@ -129,7 +130,7 @@
             let canvas;
             let currentTool = 'draw';
             let brushColor = '#000000';
-            let penSize = 5;
+            let penSize = 3.5;
             let eraserSize = 20;
             let useStabilizer = false;
             let stabilizerStrength = 8;
@@ -443,7 +444,10 @@
                     // Set the fill color for every path in the parsed SVG.
                     objects.forEach(obj => {
                         if (obj.isType('path')) {
-                           obj.set('fill', brushColor);
+                           obj.set({
+                            fill: brushColor,
+                            stroke: brushColor
+                    });
                         }
                     });
                     
@@ -455,6 +459,7 @@
                         originY: 'center',
                         isSvg: true, // Custom property to identify this as a math object
                         fill: brushColor, // Store the main color for later changes
+                        stroke: brushColor,
                     });
 
                     // Scale the group to a reasonable default size.
@@ -708,7 +713,7 @@
                 setTool('select');
                 const text = new fabric.IText('Double-click to edit', { 
                     left: canvas.width / 2, top: canvas.height / 2, originX: 'center', originY: 'center',
-                    fill: brushColor, fontSize: 20, fontFamily: 'Inter', padding: 5, 
+                    fill: brushColor, fontSize: 40, fontFamily: 'Inter', padding: 5, fontWeight: 1000
                 });
                 canvas.add(text).setActiveObject(text).renderAll();
                 text.enterEditing();

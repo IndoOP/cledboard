@@ -300,21 +300,36 @@
             function saveState() {
                 const currentSlide = slides[currentSlideIndex];
                 if (!currentSlide) return;
+                
+                const slideData = canvas.toJSON(customProps);
+
+                // Prevent saving empty history states if nothing changed.
+                if (currentSlide.history.length > 0) {
+                    const lastState = JSON.stringify(currentSlide.history[currentSlide.historyIndex]);
+                    if (lastState === JSON.stringify(slideData)) return;
+                }
+
                 if (currentSlide.historyIndex < currentSlide.history.length - 1) {
                     currentSlide.history = currentSlide.history.slice(0, currentSlide.historyIndex + 1);
                 }
-                currentSlide.history.push(canvas.toJSON(customProps));
+                currentSlide.history.push(slideData);
                 currentSlide.historyIndex++;
+                
+                // Also update the primary data reference
+                slides[currentSlideIndex].data = slideData;
             }
 
             // --- SLIDE MANAGEMENT ---
             function initSlides() { addSlide(); }
             function addSlide(data = null, atIndex = -1) {
                 const newSlideData = { history: [], historyIndex: -1, data: data || { objects: [], background: isDarkMode ? '#1f2937' : '#ffffff' } };
-                if (data) { newSlideData.history.push(data); newSlideData.historyIndex = 0; }
+                if (data) { 
+                    newSlideData.history.push(data); 
+                    newSlideData.historyIndex = 0; 
+                }
                 const insertPosition = (atIndex > -1) ? atIndex : slides.length;
                 slides.splice(insertPosition, 0, newSlideData);
-                // When adding a slide, force a switch to it
+                
                 const previousIndex = currentSlideIndex;
                 currentSlideIndex = -1; // Force switchSlide to reload
                 switchSlide(insertPosition, previousIndex);
@@ -327,16 +342,25 @@
             }
             function switchSlide(index, previousIndex = -1) {
                 if (index < 0 || index >= slides.length) return;
-                 // Avoid saving state if we're just re-rendering the same slide
-                if (index !== previousIndex && previousIndex !== -1 && slides[previousIndex]) {
+                
+                if (index === currentSlideIndex) return;
+
+                if (previousIndex !== -1 && slides[previousIndex]) {
                     saveCurrentSlideState();
                 }
 
                 currentSlideIndex = index;
                 const slide = slides[currentSlideIndex];
+                
                 loadState(slide.data);
-                canvas.setBackgroundColor(slide.data.background || (isDarkMode ? '#1f2937' : '#ffffff'), canvas.renderAll.bind(canvas));
-                if (slide.history.length === 0) { saveState(); }
+                
+                if (slide.history.length === 0) { 
+                    // This is a new, empty slide. Save its initial state.
+                    const initialState = canvas.toJSON(customProps);
+                    slide.data = initialState;
+                    slide.history.push(initialState);
+                    slide.historyIndex = 0;
+                }
                 renderSlideThumbnails();
             }
             function confirmDeleteSlide(index) {
@@ -357,24 +381,13 @@
                 });
                 return footer;
             }
-            /**
-             * NEW: Handles duplicating a slide.
-             * @param {number} index The index of the slide to duplicate.
-             */
             function duplicateSlide(index) {
-                saveCurrentSlideState(); // Ensure the latest canvas state is saved
+                saveCurrentSlideState(); 
                 const slideToCopy = slides[index];
                 if (!slideToCopy) return;
-
-                // Create a deep copy of the slide data to avoid reference issues
                 const copiedData = JSON.parse(JSON.stringify(slideToCopy.data));
                 addSlide(copiedData, index + 1);
             }
-
-            /**
-             * FIXED: Logic for deleting a slide to prevent errors.
-             * @param {number} index The index of the slide to delete.
-             */
             function deleteSlide(index) {
                 if (slides.length <= 1) {
                     showModal("Cannot Delete", "<p>You cannot delete the last slide.</p>", createDialogButtons({text: 'OK', action: hideModal, class: 'bg-blue-500 text-white'}));
@@ -386,14 +399,11 @@
                 
                 let newIndex = oldIndex;
                 if (index < oldIndex) {
-                    newIndex--; // Deleted a slide before the current one
+                    newIndex--; 
                 } else if (index === oldIndex) {
-                    // Deleted the current slide, stay at this index if possible, or move back
                     newIndex = Math.min(index, slides.length - 1);
                 }
                 
-                // Force switchSlide to run, even if the index number is the same,
-                // because the content at that index has changed.
                 currentSlideIndex = -1;
                 switchSlide(newIndex, oldIndex);
             }
@@ -517,8 +527,124 @@
             }
 
             // --- FILE IMPORT/EXPORT ---
-            async function importPDF(file) { /* ... implementation unchanged ... */ }
-            function handlePaste(e) { /* ... implementation unchanged ... */ }
+            
+            /**
+             * FIXED: Imports a PDF file by preparing all pages first and then updating the slides at once
+             * to prevent asynchronous state issues.
+             * @param {File} file The PDF file to import.
+             */
+            async function importPDF(file) {
+                const fileURL = URL.createObjectURL(file);
+                showModal('Importing PDF', `<p id="pdf-import-progress">Loading PDF...</p>`, null);
+                
+                try {
+                    const pdf = await pdfjsLib.getDocument(fileURL).promise;
+                    const numPages = pdf.numPages;
+
+                    const isCanvasEmpty = (slides.length === 1 && canvas.getObjects().length === 0);
+                    const startIndex = isCanvasEmpty ? 0 : slides.length;
+                    
+                    let newSlidesData = [];
+
+                    for (let i = 1; i <= numPages; i++) {
+                        document.getElementById('pdf-import-progress').textContent = `Processing page ${i} of ${numPages}...`;
+
+                        const page = await pdf.getPage(i);
+                        const viewport = page.getViewport({ scale: 1 });
+                        
+                        const scale = Math.min(canvas.width / viewport.width, canvas.height / viewport.height);
+                        const scaledViewport = page.getViewport({ scale });
+
+                        const tempCanvas = document.createElement('canvas');
+                        const tempCtx = tempCanvas.getContext('2d');
+                        tempCanvas.width = scaledViewport.width;
+                        tempCanvas.height = scaledViewport.height;
+
+                        await page.render({ canvasContext: tempCtx, viewport: scaledViewport }).promise;
+                        
+                        const imgDataUrl = tempCanvas.toDataURL('image/png');
+
+                        // Create the JSON data for a fabric canvas containing just this image.
+                        const slideJson = {
+                            version: fabric.version,
+                            objects: [{
+                                type: 'image',
+                                version: '5.3.1',
+                                originX: 'center',
+                                originY: 'center',
+                                left: canvas.width / 2,
+                                top: canvas.height / 2,
+                                width: scaledViewport.width,
+                                height: scaledViewport.height,
+                                src: imgDataUrl,
+                                crossOrigin: 'anonymous',
+                                selectable: true
+                            }],
+                            background: isDarkMode ? '#1f2937' : '#ffffff'
+                        };
+                        
+                        newSlidesData.push(slideJson);
+                    }
+                    
+                    if (newSlidesData.length > 0) {
+                        // Create full slide objects from the generated JSON
+                        const slidesToAdd = newSlidesData.map(data => ({
+                            history: [JSON.parse(JSON.stringify(data))],
+                            historyIndex: 0,
+                            data: data
+                        }));
+
+                        if (isCanvasEmpty) {
+                            // Replace the initial empty slide with the new ones
+                            slides.splice(0, 1, ...slidesToAdd);
+                        } else {
+                            // Add the new slides to the end
+                            slides.splice(startIndex, 0, ...slidesToAdd);
+                        }
+                        
+                        // Update UI
+                        renderSlideThumbnails();
+                        
+                        // Switch to the first of the newly added slides
+                        const oldIndex = currentSlideIndex;
+                        currentSlideIndex = -1; 
+                        switchSlide(startIndex, oldIndex);
+                    }
+
+                } catch (error) {
+                    console.error('Error importing PDF:', error);
+                    showModal('Import Error', `<p>Could not import PDF. The file might be corrupted or in an unsupported format.</p><p class="text-sm mt-2 text-gray-500">${error.message}</p>`, createDialogButtons({text: 'OK', action: hideModal, class: 'bg-blue-500 text-white'}));
+                } finally {
+                    URL.revokeObjectURL(fileURL);
+                    hideModal();
+                }
+            }
+
+            /**
+             * Handles pasting content, specifically looking for images from the clipboard.
+             * @param {ClipboardEvent} e The paste event.
+             */
+            function handlePaste(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || canvas.getActiveObject()?.isEditing) return;
+
+                const items = e.clipboardData?.items;
+                if (!items) return;
+
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const blob = items[i].getAsFile();
+                        if (blob) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                addImage(event.target.result);
+                            };
+                            reader.readAsDataURL(blob);
+                            e.preventDefault();
+                            return;
+                        }
+                    }
+                }
+            }
             
             // --- UI BINDINGS ---
             document.getElementById('select-tool').onclick = () => setTool('select');
@@ -559,31 +685,24 @@
                 if (currentTool === 'eraser') { canvas.freeDrawingBrush.width = parseInt(eraserSize, 10); }
             }
             
-            // --- NEW: ADVANCED DRAWING LOGIC FOR SMOOTH STROKES ---
-            
+            // --- ADVANCED DRAWING LOGIC ---
             function handlePointerDown(e) {
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
-                // Only handle pointer events for the drawing tool
                 if (currentTool !== 'draw') return;
                 e.preventDefault();
                 isDrawingPath = true;
                 const pointer = getPoint(e);
                 drawingPoints = [{ x: pointer.x, y: pointer.y, pressure: e.pressure }];
             }
-
             function handlePointerMove(e) {
                 if (!isDrawingPath) return;
                 e.preventDefault();
                 const pointer = getPoint(e);
                 drawingPoints.push({ x: pointer.x, y: pointer.y, pressure: e.pressure });
-
-                // --- FIXED: Re-enabled live preview ---
-                // Get the canvas's top context for temporary drawing
                 const ctx = canvas.contextTop;
                 ctx.save();
-                // Clear the previous preview
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.globalAlpha = 0.7; // Make the preview slightly transparent
+                ctx.globalAlpha = 0.7;
                 ctx.beginPath();
                 ctx.moveTo(drawingPoints[0].x, drawingPoints[0].y);
                 for(let i = 1; i < drawingPoints.length; i++) {
@@ -596,15 +715,11 @@
                 ctx.stroke();
                 ctx.restore();
             }
-
             function handlePointerUp(e) {
                 if (!isDrawingPath) return;
                 e.preventDefault();
                 isDrawingPath = false;
-
-                // --- FIXED: Clear the live preview context ---
                 canvas.clearContext(canvas.contextTop);
-                
                 if (drawingPoints.length > 1) {
                     const path = createSmoothPath(drawingPoints);
                     if (path) {
@@ -614,69 +729,31 @@
                 }
                 drawingPoints = [];
             }
-
-            function getPoint(e) {
-                return new fabric.Point(e.offsetX, e.offsetY);
-            }
-            
-            /**
-             * NEW: Creates a smooth Fabric.Path object from a series of points
-             * using quadratic bezier curves for a much less pixelated look.
-             */
+            function getPoint(e) { return new fabric.Point(e.offsetX, e.offsetY); }
             function createSmoothPath(points) {
                 if (points.length < 2) return null;
-
-                // If stabilizer is off, create a simple polyline
                 if (!useStabilizer) {
-                     const polyline = new fabric.Polyline(points, {
-                        fill: null,
-                        stroke: brushColor,
-                        strokeWidth: parseFloat(penSize),
-                        strokeLineCap: 'round',
-                        strokeLineJoin: 'round',
-                        originX: 'left',
-                        originY: 'top',
-                        selectable: false,
-                    });
-                    return polyline;
+                     return new fabric.Polyline(points, { fill: null, stroke: brushColor, strokeWidth: parseFloat(penSize), strokeLineCap: 'round', strokeLineJoin: 'round', originX: 'left', originY: 'top', selectable: false });
                 }
-
-                // --- Smoothing logic ---
                 let pathString = `M ${points[0].x} ${points[0].y}`;
                 if (points.length === 2) {
                     pathString += ` L ${points[1].x} ${points[1].y}`;
                 } else {
                     let midPoint = {x: (points[0].x + points[1].x)/2, y: (points[0].y + points[1].y)/2};
-                    // Start with a small line to the first midpoint
                     pathString += ` L ${midPoint.x} ${midPoint.y}`;
-                    
-                    // Use quadratic bezier curves for the main body of the line
                     for (let i = 1; i < points.length - 1; i++) {
                         let p1 = points[i];
                         let p2 = points[i+1];
                         midPoint = {x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2};
                         pathString += ` Q ${p1.x},${p1.y} ${midPoint.x},${midPoint.y}`;
                     }
-                    // End with a line to the final point
                     let lastPoint = points[points.length - 1];
                     pathString += ` L ${lastPoint.x} ${lastPoint.y}`;
                 }
-                
-                const path = new fabric.Path(pathString, {
-                    fill: null,
-                    stroke: brushColor,
-                    strokeWidth: parseFloat(penSize),
-                    strokeLineCap: 'round',
-                    strokeLineJoin: 'round',
-                    originX: 'left',
-                    originY: 'top',
-                    selectable: false,
-                });
-
-                return path;
+                return new fabric.Path(pathString, { fill: null, stroke: brushColor, strokeWidth: parseFloat(penSize), strokeLineCap: 'round', strokeLineJoin: 'round', originX: 'left', originY: 'top', selectable: false });
             }
 
-            // --- SHAPE DRAWING LOGIC (Unchanged) ---
+            // --- SHAPE DRAWING LOGIC ---
             function handleMouseDown(o) {
                 const shapeTools = ['rect', 'circle', 'triangle', 'line'];
                 if (!shapeTools.includes(currentTool) || isDrawingShape) return;
@@ -692,7 +769,6 @@
                 canvas.add(shape);
             }
             function handleMouseMove(o) {
-                // Prevent interference with path drawing
                 if (isDrawingPath) return; 
                 if (!isDrawingShape || !shape) return;
                 const pointer = canvas.getPointer(o.e);
@@ -726,8 +802,8 @@
             }
 
             function deleteSelected() { canvas.getActiveObjects().forEach(obj => canvas.remove(obj)); canvas.discardActiveObject().renderAll(); saveState(); }
-            function undo() { const slide = slides[currentSlideIndex]; if (slide.historyIndex > 0) { slide.historyIndex--; loadState(slide.history[slide.historyIndex]); } }
-            function redo() { const slide = slides[currentSlideIndex]; if (slide.historyIndex < slide.history.length - 1) { slide.historyIndex++; loadState(slide.history[slide.historyIndex]); } }
+            function undo() { const slide = slides[currentSlideIndex]; if (slide && slide.historyIndex > 0) { slide.historyIndex--; loadState(slide.history[slide.historyIndex]); } }
+            function redo() { const slide = slides[currentSlideIndex]; if (slide && slide.historyIndex < slide.history.length - 1) { slide.historyIndex++; loadState(slide.history[slide.historyIndex]); } }
             
             function populateColorPalette() {
                 const palette = document.getElementById('color-palette'); palette.innerHTML = ''; const colors = isDarkMode ? darkColors : lightColors;

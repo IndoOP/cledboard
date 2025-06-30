@@ -22,12 +22,13 @@ exports.handler = async (event) => {
       body: JSON.stringify(response.data)
     };
   } catch (err) {
-  console.error('Gemini API error:', err.response?.data || err.message);
+  const geminiError = err.response?.data || err.message || 'Unknown error';
+  console.error('Gemini API error:', geminiError);
   return {
     statusCode: 500,
     body: JSON.stringify({
       error: 'Gemini API call failed',
-      details: err.response?.data || err.message
+      details: geminiError
     })
   };
 }

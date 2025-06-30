@@ -488,13 +488,21 @@
             }
             async function callGeminiApi(prompt, imageData = null) {
                 let chatHistory = [{ role: "user", parts: [{ text: prompt }] }]; if (imageData) { chatHistory[0].parts.push({ inlineData: { mimeType: "image/png", data: imageData } }); }
-                const payload = { contents: chatHistory }; const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const payload = { contents: chatHistory }; const apiKey = ""; const apiUrl = '/.netlify/functions/gemini';
                 try {
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) { throw new Error(`API request failed with status ${response.status}`); }
-                    const result = await response.json();
-                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) { return result.candidates[0].content.parts[0].text; }
-                    else { throw new Error("Invalid response structure from API."); }
+                    fetch(apiUrl, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(payload)  // where payload contains prompt and imageData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                      console.log("Gemini result:", data);
+                      // Handle/display data as needed
+                    })
+                    .catch(err => {
+                      console.error("Error calling Netlify function:", err);
+                    });
                 } catch(error) { console.error("Gemini API call failed:", error); return `Error: Could not get a response. ${error.message}`; }
             }
             async function handleExplainTool() {

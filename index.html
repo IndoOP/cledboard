@@ -203,8 +203,6 @@
             function setupEventListeners() {
                 canvas.on('object:modified', () => saveState());
                 
-                // BUGFIX: Unify all canvas interactions to use Pointer events.
-                // This resolves conflicts between mouse and touch/pen inputs.
                 const canvasContainer = canvas.getElement().parentElement;
                 canvasContainer.addEventListener('pointerdown', handlePointerDown, { passive: false });
                 canvasContainer.addEventListener('pointermove', handlePointerMove, { passive: false });
@@ -255,7 +253,6 @@
                     canvas.defaultCursor = pencilCursor;
                     canvas.hoverCursor = pencilCursor;
                 } else if (tool === 'eraser') {
-                    // Custom cursor for the eraser for better visual feedback
                     const eraserCursor = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='18' height='18' rx='2' ry='2' fill='white' /></svg>\") 12 12, auto";
                     canvas.defaultCursor = eraserCursor;
                     canvas.hoverCursor = eraserCursor;
@@ -676,7 +673,7 @@
             }
 
             function handlePointerMove(e) {
-                if (e.pointerType === 'mouse' && e.buttons !== 1) return; // Only move if primary button is down
+                if (e.pointerType === 'mouse' && e.buttons !== 1) return;
                 e.preventDefault();
                 const pointer = getPoint(e);
 
@@ -693,7 +690,6 @@
                         ctx.lineTo(drawingPoints[i].x, drawingPoints[i].y);
                     }
                     ctx.strokeStyle = brushColor;
-                    // Use correct size for pen vs eraser
                     const currentSize = currentTool === 'eraser' ? eraserSize : penSize;
                     ctx.lineWidth = parseFloat(currentSize);
                     ctx.lineCap = 'round';
@@ -723,15 +719,31 @@
                 e.preventDefault();
 
                 if (isDrawingPath) {
-                    isDrawingPath = false;
                     canvas.clearContext(canvas.contextTop);
-                    if (drawingPoints.length > 1) {
+                    // BUGFIX: Handle dot drawing on single click/tap
+                    if (drawingPoints.length === 1) {
+                        const point = drawingPoints[0];
+                        const dotSize = currentTool === 'eraser' ? eraserSize : penSize;
+                        const dot = new fabric.Circle({
+                            left: point.x,
+                            top: point.y,
+                            radius: parseFloat(dotSize) / 2,
+                            fill: brushColor,
+                            originX: 'center',
+                            originY: 'center',
+                            selectable: false,
+                            evented: false,
+                        });
+                        canvas.add(dot);
+                        saveState();
+                    } else if (drawingPoints.length > 1) {
                         const path = createSmoothPath(drawingPoints);
                         if (path) {
                             canvas.add(path);
                             saveState();
                         }
                     }
+                    isDrawingPath = false;
                     drawingPoints = [];
                 } else if (isDrawingShape) {
                     isDrawingShape = false;
@@ -879,7 +891,7 @@
                 }
                 
                 populateColorPalette(); 
-                setTool(currentTool); // Refresh tool to update eraser color and cursor
+                setTool(currentTool);
                 hideModal();
             }
             async function exportToPDF() {

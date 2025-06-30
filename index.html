@@ -165,10 +165,12 @@
             const smoothingFactor = 0.75; 
             
             let draggedSlideIndex = null;
+            
+            const HISTORY_LIMIT = 30; // NEW: Limit the number of history states
 
             const lightColors = ['#000000', '#EF4444', '#F97316', '#EAB308', '#22C55E', '#3B82F6', '#8B5CF6'];
             const darkColors =  ['#FFFFFF', '#FCA5A5', '#FDBA74', '#FDE047', '#86EFAC', '#93C5FD', '#C4B5FD'];
-            const customProps = ['isMath', 'isShape', 'sourceData', 'isEraser']; // Added isEraser
+            const customProps = ['isMath', 'isShape', 'sourceData', 'isEraser'];
 
             // --- INITIALIZATION ---
             function initCanvas() {
@@ -312,6 +314,10 @@
                 });
             }
 
+            /**
+             * [MODIFIED] Saves the canvas state and manages history size.
+             * Now limits the undo/redo history to the value of HISTORY_LIMIT.
+             */
             function saveState() {
                 const currentSlide = slides[currentSlideIndex];
                 if (!currentSlide) return;
@@ -329,6 +335,12 @@
                 currentSlide.history.push(slideData);
                 currentSlide.historyIndex++;
                 
+                // NEW: Enforce history limit
+                if (currentSlide.history.length > HISTORY_LIMIT) {
+                    currentSlide.history.shift(); // Remove the oldest state
+                    currentSlide.historyIndex--;  // Adjust the index to match
+                }
+
                 slides[currentSlideIndex].data = slideData;
             }
 
@@ -724,10 +736,6 @@
                 }
             }
 
-            /**
-             * [MODIFIED] Finalizes the drawing process.
-             * Now tags eraser "dots" with `isEraser: true`.
-             */
             function handlePointerUp(e) {
                 if (!isDrawingPath && !isDrawingShape) { return; }
                 e.preventDefault();
@@ -773,10 +781,6 @@
 
             function getPoint(e) { return canvas.getPointer(e); }
             
-            /**
-             * [MODIFIED] Creates a smooth, curved path from a series of points.
-             * Now tags eraser paths with `isEraser: true`.
-             */
             function createSmoothPath(points) {
                 if (points.length < 2) return null;
                 const currentSize = currentTool === 'eraser' ? eraserSize : penSize;
@@ -864,10 +868,6 @@
                 });
             }
 
-            /**
-             * [MODIFIED] Toggles between light and dark mode.
-             * Now correctly updates eraser strokes to match the new background color.
-             */
             async function toggleDarkMode() {
                 saveCurrentSlideState();
                 isDarkMode = !isDarkMode; document.documentElement.classList.toggle('dark', isDarkMode);
@@ -889,12 +889,10 @@
                 for (const slide of slides) {
                     if (!slide.data.objects) continue;
                     slide.data.objects.forEach(obj => {
-                        // Check if the object is an eraser stroke/dot
                         if (obj.isEraser) {
                             const propToChange = obj.type === 'path' ? 'stroke' : 'fill';
                             obj[propToChange] = newBgColor;
                         } else {
-                            // Handle regular objects
                             const processColor = (prop) => { 
                                 const currentColor = obj[prop]; 
                                 if (typeof currentColor === 'string' && currentColor !== 'transparent' && currentColor !== null) { 
@@ -934,24 +932,86 @@
                 hideModal();
             }
 
+            /**
+             * [NEW] Helper function to re-render a math object on a given canvas.
+             * This is needed for the PDF export to correctly render math SVGs.
+             */
+            async function renderMathForExport(mathObj, targetCanvas) {
+                const latex = mathObj.sourceData;
+                const targetColor = mathObj.fill;
+
+                const node = await MathJax.tex2svgPromise(latex, { display: true });
+                const svgData = new XMLSerializer().serializeToString(node.querySelector('svg'));
+                
+                // This returns a promise that resolves when the SVG is loaded and added
+                return new Promise(resolve => {
+                    fabric.loadSVGFromString(svgData, (objects, options) => {
+                        objects.forEach(part => {
+                            part.set({ fill: targetColor, stroke: targetColor });
+                        });
+                        
+                        const newGroup = new fabric.Group(objects, {
+                            left: mathObj.left, top: mathObj.top, originX: 'center', originY: 'center',
+                            scaleX: mathObj.scaleX, scaleY: mathObj.scaleY, angle: mathObj.angle,
+                            isMath: true, sourceData: latex, fill: targetColor
+                        });
+                        
+                        targetCanvas.remove(mathObj);
+                        targetCanvas.add(newGroup);
+                        resolve();
+                    });
+                });
+            }
+
+            /**
+             * [MODIFIED] Exports the whiteboard slides to a PDF.
+             * Now correctly renders MathJax expressions before adding them to the PDF.
+             */
             async function exportToPDF() {
-                const { jsPDF } = window.jspdf; saveCurrentSlideState();
-                const originalWidth = canvas.width; const originalHeight = canvas.height;
-                const doc = new jsPDF({ orientation: originalWidth > originalHeight ? 'landscape' : 'portrait', unit: 'px', format: [originalWidth, originalHeight] });
+                const { jsPDF } = window.jspdf; 
+                saveCurrentSlideState();
+                const originalWidth = canvas.width; 
+                const originalHeight = canvas.height;
+                const doc = new jsPDF({ 
+                    orientation: originalWidth > originalHeight ? 'landscape' : 'portrait', 
+                    unit: 'px', 
+                    format: [originalWidth, originalHeight] 
+                });
                 showModal('Exporting PDF', `<p id="pdf-export-progress">Starting export...</p>`, null);
+
                 for (let i = 0; i < slides.length; i++) {
                     document.getElementById('pdf-export-progress').textContent = `Processing slide ${i + 1} of ${slides.length}...`;
-                    const slideData = slides[i].data; const tempCanvas = new fabric.StaticCanvas(null, { width: originalWidth, height: originalHeight });
+                    const slideData = slides[i].data; 
+                    const tempCanvas = new fabric.StaticCanvas(null, { 
+                        width: originalWidth, 
+                        height: originalHeight 
+                    });
+
                     await new Promise(resolve => {
-                       tempCanvas.loadFromJSON(slideData, () => {
-                           tempCanvas.renderAll(); const imgData = tempCanvas.toDataURL({ format: 'jpeg', quality: 0.8 });
-                           if (i > 0) { doc.addPage([originalWidth, originalHeight], originalWidth > originalHeight ? 'landscape' : 'portrait'); }
+                       tempCanvas.loadFromJSON(slideData, async () => {
+                           // Find all math objects and create promises to re-render them
+                           const mathObjects = tempCanvas.getObjects().filter(obj => obj.isMath);
+                           const renderingPromises = mathObjects.map(obj => renderMathForExport(obj, tempCanvas));
+                           
+                           // Wait for all math objects to be fully rendered
+                           await Promise.all(renderingPromises);
+
+                           // Now that math is rendered, generate the image for the PDF
+                           tempCanvas.renderAll(); 
+                           const imgData = tempCanvas.toDataURL({ format: 'jpeg', quality: 0.9 });
+                           
+                           if (i > 0) { 
+                               doc.addPage([originalWidth, originalHeight], originalWidth > originalHeight ? 'landscape' : 'portrait'); 
+                           }
                            doc.addImage(imgData, 'JPEG', 0, 0, originalWidth, originalHeight, undefined, 'FAST');
-                           tempCanvas.dispose(); resolve();
+                           
+                           tempCanvas.dispose(); 
+                           resolve();
                        });
                     });
                 }
-                doc.save('whiteboard_export.pdf'); hideModal();
+                doc.save('whiteboard_export.pdf'); 
+                hideModal();
             }
 
             // --- LET'S GO ---

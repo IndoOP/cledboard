@@ -161,11 +161,14 @@
             let isDrawingPath = false;
             let drawingPoints = [];
             
+            let smoothedPoint = null;
+            const smoothingFactor = 0.75; 
+            
             let draggedSlideIndex = null;
 
             const lightColors = ['#000000', '#EF4444', '#F97316', '#EAB308', '#22C55E', '#3B82F6', '#8B5CF6'];
             const darkColors =  ['#FFFFFF', '#FCA5A5', '#FDBA74', '#FDE047', '#86EFAC', '#93C5FD', '#C4B5FD'];
-            const customProps = ['isMath', 'isShape', 'sourceData'];
+            const customProps = ['isMath', 'isShape', 'sourceData', 'isEraser']; // Added isEraser
 
             // --- INITIALIZATION ---
             function initCanvas() {
@@ -228,7 +231,6 @@
                     obj.evented = isSelectTool;
                 });
 
-                // Set brush color and cursor based on the tool
                 if (tool === 'draw' || shapeTools.includes(tool)) {
                     brushColor = activeColor;
                 } else if (tool === 'eraser') {
@@ -631,9 +633,9 @@
             }
             
             // --- UNIFIED DRAWING & SHAPE LOGIC ---
+            
             function handlePointerDown(e) {
                 const shapeTools = ['rect', 'circle', 'triangle', 'line'];
-                // If not a drawing tool, let fabric.js handle the event for selection/transformation
                 if (currentTool !== 'draw' && currentTool !== 'eraser' && !shapeTools.includes(currentTool)) {
                     return;
                 }
@@ -645,7 +647,8 @@
 
                 if (currentTool === 'draw' || currentTool === 'eraser') {
                     isDrawingPath = true;
-                    drawingPoints = [{ x: pointer.x, y: pointer.y, pressure: e.pressure }];
+                    smoothedPoint = { x: pointer.x, y: pointer.y };
+                    drawingPoints = [{ x: pointer.x, y: pointer.y }];
                 } else if (shapeTools.includes(currentTool)) {
                     isDrawingShape = true;
                     startPoint = pointer;
@@ -665,34 +668,43 @@
             }
 
             function handlePointerMove(e) {
-                // Only run this custom handler if we're in the middle of a drawing action
-                if (!isDrawingPath && !isDrawingShape) {
-                    return;
-                }
-
+                if (!isDrawingPath && !isDrawingShape) { return; }
                 if (e.pointerType === 'mouse' && e.buttons !== 1) return;
                 e.preventDefault();
                 const pointer = getPoint(e);
 
                 if (isDrawingPath) {
-                    drawingPoints.push({ x: pointer.x, y: pointer.y, pressure: e.pressure });
+                    if (useStabilizer) {
+                        smoothedPoint.x = smoothingFactor * smoothedPoint.x + (1 - smoothingFactor) * pointer.x;
+                        smoothedPoint.y = smoothingFactor * smoothedPoint.y + (1 - smoothingFactor) * pointer.y;
+                        drawingPoints.push({ x: smoothedPoint.x, y: smoothedPoint.y });
+                    } else {
+                        drawingPoints.push({ x: pointer.x, y: pointer.y });
+                    }
                     
                     const ctx = canvas.contextTop;
                     ctx.save();
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.globalAlpha = 0.7;
-                    ctx.beginPath();
-                    ctx.moveTo(drawingPoints[0].x, drawingPoints[0].y);
-                    for(let i = 1; i < drawingPoints.length; i++) {
-                        ctx.lineTo(drawingPoints[i].x, drawingPoints[i].y);
-                    }
                     ctx.strokeStyle = brushColor;
                     const currentSize = currentTool === 'eraser' ? eraserSize : penSize;
                     ctx.lineWidth = parseFloat(currentSize);
                     ctx.lineCap = 'round';
                     ctx.lineJoin = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(drawingPoints[0].x, drawingPoints[0].y);
+
+                    for (let i = 1; i < drawingPoints.length - 2; i++) {
+                        const midPoint = {
+                            x: (drawingPoints[i].x + drawingPoints[i + 1].x) / 2,
+                            y: (drawingPoints[i].y + drawingPoints[i + 1].y) / 2
+                        };
+                        ctx.quadraticCurveTo(drawingPoints[i].x, drawingPoints[i].y, midPoint.x, midPoint.y);
+                    }
+                    ctx.lineTo(drawingPoints[drawingPoints.length - 1].x, drawingPoints[drawingPoints.length - 1].y);
                     ctx.stroke();
                     ctx.restore();
+
                 } else if (isDrawingShape && shape) {
                     if(currentTool === 'line') { 
                         shape.set({ x2: pointer.x, y2: pointer.y }); 
@@ -712,41 +724,42 @@
                 }
             }
 
+            /**
+             * [MODIFIED] Finalizes the drawing process.
+             * Now tags eraser "dots" with `isEraser: true`.
+             */
             function handlePointerUp(e) {
-                // Only run this custom handler if we're in the middle of a drawing action
-                if (!isDrawingPath && !isDrawingShape) {
-                    return;
-                }
-
+                if (!isDrawingPath && !isDrawingShape) { return; }
                 e.preventDefault();
 
                 if (isDrawingPath) {
                     canvas.clearContext(canvas.contextTop);
-                    // BUGFIX: Handle dot drawing on single click/tap
-                    if (drawingPoints.length === 1) {
-                        const point = drawingPoints[0];
+                    if (drawingPoints.length < 2) {
+                        const point = drawingPoints[0] || getPoint(e);
                         const dotSize = currentTool === 'eraser' ? eraserSize : penSize;
-                        const dot = new fabric.Circle({
-                            left: point.x,
-                            top: point.y,
-                            radius: parseFloat(dotSize) / 2,
-                            fill: brushColor,
-                            originX: 'center',
-                            originY: 'center',
-                            selectable: false,
-                            evented: false,
-                        });
+                        const dotOptions = {
+                            left: point.x, top: point.y,
+                            radius: parseFloat(dotSize) / 2, fill: brushColor,
+                            originX: 'center', originY: 'center',
+                            selectable: false, evented: false,
+                        };
+                        
+                        if (currentTool === 'eraser') {
+                            dotOptions.isEraser = true;
+                        }
+
+                        const dot = new fabric.Circle(dotOptions);
                         canvas.add(dot);
-                        saveState();
-                    } else if (drawingPoints.length > 1) {
+                    } else {
                         const path = createSmoothPath(drawingPoints);
                         if (path) {
                             canvas.add(path);
-                            saveState();
                         }
                     }
+                    saveState();
                     isDrawingPath = false;
                     drawingPoints = [];
+                    smoothedPoint = null;
                 } else if (isDrawingShape) {
                     isDrawingShape = false;
                     if(shape) {
@@ -760,6 +773,10 @@
 
             function getPoint(e) { return canvas.getPointer(e); }
             
+            /**
+             * [MODIFIED] Creates a smooth, curved path from a series of points.
+             * Now tags eraser paths with `isEraser: true`.
+             */
             function createSmoothPath(points) {
                 if (points.length < 2) return null;
                 const currentSize = currentTool === 'eraser' ? eraserSize : penSize;
@@ -767,10 +784,11 @@
                     fill: null, stroke: brushColor, strokeWidth: parseFloat(currentSize),
                     strokeLineCap: 'round', strokeLineJoin: 'round', originX: 'left',
                     originY: 'top', selectable: false, evented: false,
+                    strokeUniform: true
                 };
 
-                if (!useStabilizer || points.length < 3) {
-                    return new fabric.Polyline(points, pathOptions);
+                if (currentTool === 'eraser') {
+                    pathOptions.isEraser = true;
                 }
 
                 let path = [['M', points[0].x, points[0].y]];
@@ -845,6 +863,11 @@
                     palette.appendChild(btn);
                 });
             }
+
+            /**
+             * [MODIFIED] Toggles between light and dark mode.
+             * Now correctly updates eraser strokes to match the new background color.
+             */
             async function toggleDarkMode() {
                 saveCurrentSlideState();
                 isDarkMode = !isDarkMode; document.documentElement.classList.toggle('dark', isDarkMode);
@@ -861,25 +884,39 @@
 
                 showModal('Updating Theme', '<p>Applying new theme to all slides...</p>', null);
                 
+                const newBgColor = isDarkMode ? '#1f2937' : '#ffffff';
+
                 for (const slide of slides) {
                     if (!slide.data.objects) continue;
                     slide.data.objects.forEach(obj => {
-                        const processColor = (prop) => { 
-                            const currentColor = obj[prop]; 
-                            if (typeof currentColor === 'string' && currentColor !== 'transparent') { 
-                                const normalizedColor = new fabric.Color(currentColor).toHex().toLowerCase(); 
-                                if (colorMap.has(normalizedColor)) { 
-                                    obj[prop] = colorMap.get(normalizedColor); 
+                        // Check if the object is an eraser stroke/dot
+                        if (obj.isEraser) {
+                            const propToChange = obj.type === 'path' ? 'stroke' : 'fill';
+                            obj[propToChange] = newBgColor;
+                        } else {
+                            // Handle regular objects
+                            const processColor = (prop) => { 
+                                const currentColor = obj[prop]; 
+                                if (typeof currentColor === 'string' && currentColor !== 'transparent' && currentColor !== null) { 
+                                    const normalizedColor = new fabric.Color(currentColor).toHex().toLowerCase(); 
+                                    if (colorMap.has(normalizedColor)) { 
+                                        obj[prop] = colorMap.get(normalizedColor); 
+                                    } 
                                 } 
-                            } 
-                        };
-                        if (obj.isMath || obj.type === 'i-text' || (obj.type === 'group' && obj.isMath)) { 
-                            processColor('fill'); 
-                        } else { 
-                            processColor('fill'); processColor('stroke'); 
+                            };
+                            if (obj.isMath || (obj.type === 'group' && obj.isMath)) { 
+                                processColor('fill');
+                                if (obj.objects) {
+                                    obj.objects.forEach(path => path.set({ fill: obj.fill, stroke: obj.fill }));
+                                }
+                            } else if (obj.type === 'i-text') {
+                                processColor('fill');
+                            } else { 
+                                processColor('fill'); processColor('stroke'); 
+                            }
                         }
                     });
-                    slide.data.background = isDarkMode ? '#1f2937' : '#ffffff';
+                    slide.data.background = newBgColor;
                     if (slide.historyIndex > -1 && slide.history[slide.historyIndex]) { 
                         slide.history[slide.historyIndex] = slide.data; 
                     }
@@ -888,7 +925,7 @@
                 const currentSlide = slides[currentSlideIndex];
                 if (currentSlide) { 
                     loadState(currentSlide.data, () => { 
-                        canvas.setBackgroundColor(isDarkMode ? '#1f2937' : '#ffffff', canvas.renderAll.bind(canvas)); 
+                        canvas.setBackgroundColor(newBgColor, canvas.renderAll.bind(canvas)); 
                     }); 
                 }
                 
@@ -896,6 +933,7 @@
                 setTool(currentTool);
                 hideModal();
             }
+
             async function exportToPDF() {
                 const { jsPDF } = window.jspdf; saveCurrentSlideState();
                 const originalWidth = canvas.width; const originalHeight = canvas.height;

@@ -158,7 +158,8 @@
             // --- STATE MANAGEMENT ---
             let canvas;
             let currentTool = 'draw';
-            let brushColor = '#000000';
+            let activeColor = '#000000'; // The user-selected color
+            let brushColor = '#000000';  // The actual color being used (can be activeColor or background for eraser)
             let penSize = 3.5;
             let eraserSize = 20;
             let useStabilizer = true;
@@ -191,6 +192,7 @@
                 canvas = new fabric.Canvas(canvasEl, {
                     isDrawingMode: false,
                     backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+                    perPixelTargetFind: false, 
                 });
                 
                 updateDrawingTool();
@@ -200,16 +202,15 @@
             
             function setupEventListeners() {
                 canvas.on('object:modified', () => saveState());
-                canvas.on('mouse:down', handleMouseDown);
-                canvas.on('mouse:move', handleMouseMove);
-                canvas.on('mouse:up', handleMouseUp);
                 
+                // BUGFIX: Unify all canvas interactions to use Pointer events.
+                // This resolves conflicts between mouse and touch/pen inputs.
                 const canvasContainer = canvas.getElement().parentElement;
                 canvasContainer.addEventListener('pointerdown', handlePointerDown, { passive: false });
                 canvasContainer.addEventListener('pointermove', handlePointerMove, { passive: false });
                 canvasContainer.addEventListener('pointerup', handlePointerUp, { passive: false });
                 canvasContainer.addEventListener('pointerleave', handlePointerUp, { passive: false });
-
+                
                 window.addEventListener('paste', handlePaste);
                 window.addEventListener('resize', resizeCanvas);
             }
@@ -231,16 +232,42 @@
             
             function setTool(tool) {
                 currentTool = tool;
-                canvas.isDrawingMode = (tool === 'eraser');
-                
-                canvas.forEachObject(obj => {
-                    obj.selectable = (tool === 'select');
-                });
-                
-                canvas.selection = (tool === 'select');
-                canvas.defaultCursor = (tool === 'draw' || tool === 'eraser') ? 'crosshair' : 'default';
+                const isSelectTool = tool === 'select';
+                const shapeTools = ['rect', 'circle', 'triangle', 'line'];
 
-                if (tool !== 'select') {
+                canvas.isDrawingMode = false;
+                canvas.selection = isSelectTool;
+
+                canvas.forEachObject(obj => {
+                    obj.selectable = isSelectTool;
+                    obj.evented = isSelectTool;
+                });
+
+                // Set brush color and cursor based on the tool
+                if (tool === 'draw' || shapeTools.includes(tool)) {
+                    brushColor = activeColor;
+                } else if (tool === 'eraser') {
+                    brushColor = isDarkMode ? '#1f2937' : '#ffffff';
+                }
+
+                if (tool === 'draw') {
+                    const pencilCursor = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/></svg>\") 4 20, auto";
+                    canvas.defaultCursor = pencilCursor;
+                    canvas.hoverCursor = pencilCursor;
+                } else if (tool === 'eraser') {
+                    // Custom cursor for the eraser for better visual feedback
+                    const eraserCursor = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='18' height='18' rx='2' ry='2' fill='white' /></svg>\") 12 12, auto";
+                    canvas.defaultCursor = eraserCursor;
+                    canvas.hoverCursor = eraserCursor;
+                } else if (shapeTools.includes(tool)) {
+                    canvas.defaultCursor = 'crosshair';
+                    canvas.hoverCursor = 'crosshair';
+                } else { 
+                    canvas.defaultCursor = 'default';
+                    canvas.hoverCursor = 'default';
+                }
+                
+                if (!isSelectTool) {
                     canvas.discardActiveObject().renderAll();
                 }
 
@@ -249,6 +276,7 @@
                 const activeBtn = document.getElementById(`${tool}-tool`);
                 if(activeBtn) activeBtn.classList.add('active');
             }
+
 
             function loadState(state, callback) {
                 if (!state) {
@@ -259,12 +287,13 @@
                 }
                 
                 canvas.loadFromJSON(state, () => {
+                    const isSelectTool = currentTool === 'select';
                     canvas.forEachObject(obj => {
                         if (obj.isMath && obj.sourceData) {
                              rerenderMath(obj);
-                        } else {
-                           obj.selectable = (currentTool === 'select');
                         }
+                        obj.selectable = isSelectTool;
+                        obj.evented = isSelectTool;
                     });
                     canvas.renderAll();
                     if (callback) callback();
@@ -303,7 +332,6 @@
                 
                 const slideData = canvas.toJSON(customProps);
 
-                // Prevent saving empty history states if nothing changed.
                 if (currentSlide.history.length > 0) {
                     const lastState = JSON.stringify(currentSlide.history[currentSlide.historyIndex]);
                     if (lastState === JSON.stringify(slideData)) return;
@@ -315,7 +343,6 @@
                 currentSlide.history.push(slideData);
                 currentSlide.historyIndex++;
                 
-                // Also update the primary data reference
                 slides[currentSlideIndex].data = slideData;
             }
 
@@ -331,7 +358,7 @@
                 slides.splice(insertPosition, 0, newSlideData);
                 
                 const previousIndex = currentSlideIndex;
-                currentSlideIndex = -1; // Force switchSlide to reload
+                currentSlideIndex = -1; 
                 switchSlide(insertPosition, previousIndex);
                 renderSlideThumbnails();
             }
@@ -342,20 +369,14 @@
             }
             function switchSlide(index, previousIndex = -1) {
                 if (index < 0 || index >= slides.length) return;
-                
                 if (index === currentSlideIndex) return;
-
                 if (previousIndex !== -1 && slides[previousIndex]) {
                     saveCurrentSlideState();
                 }
-
                 currentSlideIndex = index;
                 const slide = slides[currentSlideIndex];
-                
                 loadState(slide.data);
-                
                 if (slide.history.length === 0) { 
-                    // This is a new, empty slide. Save its initial state.
                     const initialState = canvas.toJSON(customProps);
                     slide.data = initialState;
                     slide.history.push(initialState);
@@ -393,17 +414,11 @@
                     showModal("Cannot Delete", "<p>You cannot delete the last slide.</p>", createDialogButtons({text: 'OK', action: hideModal, class: 'bg-blue-500 text-white'}));
                     return;
                 }
-                
                 const oldIndex = currentSlideIndex;
                 slides.splice(index, 1);
-                
                 let newIndex = oldIndex;
-                if (index < oldIndex) {
-                    newIndex--; 
-                } else if (index === oldIndex) {
-                    newIndex = Math.min(index, slides.length - 1);
-                }
-                
+                if (index < oldIndex) { newIndex--; } 
+                else if (index === oldIndex) { newIndex = Math.min(index, slides.length - 1); }
                 currentSlideIndex = -1;
                 switchSlide(newIndex, oldIndex);
             }
@@ -413,31 +428,25 @@
                     const thumb = document.createElement('div');
                     thumb.className = `slide-thumb relative w-32 h-[72px] bg-white dark:bg-gray-700 border-2 rounded-md cursor-pointer flex-shrink-0 ${index === currentSlideIndex ? 'active' : 'border-transparent'}`;
                     thumb.title = `Slide ${index + 1}`; thumb.dataset.index = index; thumb.draggable = true;
-                    
                     const thumbContent = document.createElement('div');
                     thumbContent.className = 'w-full h-full flex flex-col items-center justify-center pointer-events-none';
                     thumbContent.innerHTML = `<span class="text-lg font-bold text-gray-500 dark:text-gray-400">${index + 1}</span>`;
-
                     const controls = document.createElement('div');
                     controls.className = 'absolute -top-2 -right-2 flex space-x-1';
-
                     const duplicateBtn = document.createElement('button');
                     duplicateBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
                     duplicateBtn.className = 'w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-700';
                     duplicateBtn.title = "Duplicate slide";
                     duplicateBtn.onclick = (e) => { e.stopPropagation(); duplicateSlide(index); };
-                    
                     const deleteBtn = document.createElement('button');
                     deleteBtn.innerHTML = '&times;'; 
                     deleteBtn.className = 'w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-lg leading-none hover:bg-red-700';
                     deleteBtn.title = "Delete slide"; 
                     deleteBtn.onclick = (e) => { e.stopPropagation(); confirmDeleteSlide(index); };
-                    
                     controls.appendChild(duplicateBtn);
                     controls.appendChild(deleteBtn);
                     thumb.appendChild(thumbContent);
                     thumb.appendChild(controls); 
-                    
                     thumb.onclick = () => switchSlide(index, currentSlideIndex);
                     thumb.addEventListener('dragstart', handleDragStart); thumb.addEventListener('dragover', handleDragOver);
                     thumb.addEventListener('dragleave', handleDragLeave); thumb.addEventListener('drop', handleDrop);
@@ -480,8 +489,8 @@
                 MathJax.tex2svgPromise(latexInput, { display: true }).then(node => {
                     const svgData = new XMLSerializer().serializeToString(node.querySelector('svg'));
                     fabric.loadSVGFromString(svgData, (objects, options) => {
-                        objects.forEach(obj => { if (obj.isType('path')) { obj.set({ fill: brushColor, stroke: brushColor }); } });
-                        const group = new fabric.Group(objects, { left: canvas.getCenter().left, top: canvas.getCenter().top, originX: 'center', originY: 'center', isMath: true, sourceData: latexInput, fill: brushColor });
+                        objects.forEach(obj => { if (obj.isType('path')) { obj.set({ fill: activeColor, stroke: activeColor }); } });
+                        const group = new fabric.Group(objects, { left: canvas.getCenter().left, top: canvas.getCenter().top, originX: 'center', originY: 'center', isMath: true, sourceData: latexInput, fill: activeColor });
                         group.scaleToWidth(150); setTool('select'); canvas.add(group).setActiveObject(group).renderAll(); saveState(); hideModal();
                     });
                 }).catch(err => { errorEl.textContent = `MathJax Error: ${err.message}`; });
@@ -490,19 +499,14 @@
                 let chatHistory = [{ role: "user", parts: [{ text: prompt }] }]; if (imageData) { chatHistory[0].parts.push({ inlineData: { mimeType: "image/png", data: imageData } }); }
                 const payload = { contents: chatHistory }; const apiKey = ""; const apiUrl = '/.netlify/functions/gemini';
                 try {
-                    fetch(apiUrl, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(payload)  // where payload contains prompt and imageData
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                      console.log("Gemini result:", data);
-                      // Handle/display data as needed
-                    })
-                    .catch(err => {
-                      console.error("Error calling Netlify function:", err);
-                    });
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+                    const data = await response.json();
+                    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content.parts[0].text) {
+                        return data.candidates[0].content.parts[0].text;
+                    } else {
+                        return "Sorry, I couldn't generate a response. Please try again.";
+                    }
                 } catch(error) { console.error("Gemini API call failed:", error); return `Error: Could not get a response. ${error.message}`; }
             }
             async function handleExplainTool() {
@@ -530,95 +534,54 @@
                 showModal("✨ Brainstorm Results", ideasBody, createDialogButtons({ text: 'Close', action: hideModal, class: 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500' },{ text: 'Insert on Canvas', action: () => insertBrainstormIdeas(ideas), class: 'bg-blue-500 text-white hover:bg-blue-600' }));
             }
             function insertBrainstormIdeas(ideas) {
-                 const text = new fabric.IText(ideas.replace(/•/g, '\n•'), { left: canvas.getCenter().left, top: canvas.getCenter().top, originX: 'center', originY: 'center', fill: brushColor, fontSize: 24, fontFamily: 'Inter', padding: 10, shadow: 'rgba(0,0,0,0.3) 2px 2px 4px' });
+                 const text = new fabric.IText(ideas.replace(/•/g, '\n•'), { left: canvas.getCenter().left, top: canvas.getCenter().top, originX: 'center', originY: 'center', fill: activeColor, fontSize: 24, fontFamily: 'Inter', padding: 10, shadow: 'rgba(0,0,0,0.3) 2px 2px 4px' });
                  canvas.add(text).setActiveObject(text).renderAll(); text.enterEditing(); saveState(); hideModal();
             }
 
             // --- FILE IMPORT/EXPORT ---
-            
-            /**
-             * FIXED: Imports a PDF file by preparing all pages first and then updating the slides at once
-             * to prevent asynchronous state issues.
-             * @param {File} file The PDF file to import.
-             */
             async function importPDF(file) {
                 const fileURL = URL.createObjectURL(file);
                 showModal('Importing PDF', `<p id="pdf-import-progress">Loading PDF...</p>`, null);
-                
                 try {
                     const pdf = await pdfjsLib.getDocument(fileURL).promise;
                     const numPages = pdf.numPages;
-
                     const isCanvasEmpty = (slides.length === 1 && canvas.getObjects().length === 0);
                     const startIndex = isCanvasEmpty ? 0 : slides.length;
-                    
                     let newSlidesData = [];
-
                     for (let i = 1; i <= numPages; i++) {
                         document.getElementById('pdf-import-progress').textContent = `Processing page ${i} of ${numPages}...`;
-
                         const page = await pdf.getPage(i);
                         const viewport = page.getViewport({ scale: 1 });
-                        
                         const scale = Math.min(canvas.width / viewport.width, canvas.height / viewport.height);
                         const scaledViewport = page.getViewport({ scale });
-
                         const tempCanvas = document.createElement('canvas');
                         const tempCtx = tempCanvas.getContext('2d');
                         tempCanvas.width = scaledViewport.width;
                         tempCanvas.height = scaledViewport.height;
-
                         await page.render({ canvasContext: tempCtx, viewport: scaledViewport }).promise;
-                        
                         const imgDataUrl = tempCanvas.toDataURL('image/png');
-
-                        // Create the JSON data for a fabric canvas containing just this image.
                         const slideJson = {
                             version: fabric.version,
                             objects: [{
-                                type: 'image',
-                                version: '5.3.1',
-                                originX: 'center',
-                                originY: 'center',
-                                left: canvas.width / 2,
-                                top: canvas.height / 2,
-                                width: scaledViewport.width,
-                                height: scaledViewport.height,
-                                src: imgDataUrl,
-                                crossOrigin: 'anonymous',
-                                selectable: true
+                                type: 'image', version: '5.3.1', originX: 'center', originY: 'center',
+                                left: canvas.width / 2, top: canvas.height / 2,
+                                width: scaledViewport.width, height: scaledViewport.height, src: imgDataUrl,
+                                crossOrigin: 'anonymous', 
+                                selectable: (currentTool === 'select'), evented: (currentTool === 'select')
                             }],
                             background: isDarkMode ? '#1f2937' : '#ffffff'
                         };
-                        
                         newSlidesData.push(slideJson);
                     }
-                    
                     if (newSlidesData.length > 0) {
-                        // Create full slide objects from the generated JSON
-                        const slidesToAdd = newSlidesData.map(data => ({
-                            history: [JSON.parse(JSON.stringify(data))],
-                            historyIndex: 0,
-                            data: data
-                        }));
-
-                        if (isCanvasEmpty) {
-                            // Replace the initial empty slide with the new ones
-                            slides.splice(0, 1, ...slidesToAdd);
-                        } else {
-                            // Add the new slides to the end
-                            slides.splice(startIndex, 0, ...slidesToAdd);
-                        }
-                        
-                        // Update UI
+                        const slidesToAdd = newSlidesData.map(data => ({ history: [JSON.parse(JSON.stringify(data))], historyIndex: 0, data: data }));
+                        if (isCanvasEmpty) { slides.splice(0, 1, ...slidesToAdd); } 
+                        else { slides.splice(startIndex, 0, ...slidesToAdd); }
                         renderSlideThumbnails();
-                        
-                        // Switch to the first of the newly added slides
                         const oldIndex = currentSlideIndex;
                         currentSlideIndex = -1; 
                         switchSlide(startIndex, oldIndex);
                     }
-
                 } catch (error) {
                     console.error('Error importing PDF:', error);
                     showModal('Import Error', `<p>Could not import PDF. The file might be corrupted or in an unsupported format.</p><p class="text-sm mt-2 text-gray-500">${error.message}</p>`, createDialogButtons({text: 'OK', action: hideModal, class: 'bg-blue-500 text-white'}));
@@ -627,25 +590,16 @@
                     hideModal();
                 }
             }
-
-            /**
-             * Handles pasting content, specifically looking for images from the clipboard.
-             * @param {ClipboardEvent} e The paste event.
-             */
             function handlePaste(e) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || canvas.getActiveObject()?.isEditing) return;
-
                 const items = e.clipboardData?.items;
                 if (!items) return;
-
                 for (let i = 0; i < items.length; i++) {
                     if (items[i].type.indexOf('image') !== -1) {
                         const blob = items[i].getAsFile();
                         if (blob) {
                             const reader = new FileReader();
-                            reader.onload = (event) => {
-                                addImage(event.target.result);
-                            };
+                            reader.onload = (event) => { addImage(event.target.result); };
                             reader.readAsDataURL(blob);
                             e.preventDefault();
                             return;
@@ -677,8 +631,8 @@
             document.getElementById('modal').onclick = (e) => { if (e.target.id === 'modal') hideModal(); };
             document.getElementById('explain-tool').onclick = handleExplainTool;
             document.getElementById('brainstorm-tool').onclick = showBrainstormModal;
-            document.getElementById('pen-size').oninput = (e) => { penSize = e.target.value; updateDrawingTool(); };
-            document.getElementById('eraser-size').oninput = (e) => { eraserSize = e.target.value; updateDrawingTool(); };
+            document.getElementById('pen-size').oninput = (e) => { penSize = e.target.value; };
+            document.getElementById('eraser-size').oninput = (e) => { eraserSize = e.target.value; };
             document.querySelectorAll('.pen-size-btn').forEach(btn => { btn.onclick = (e) => { penSize = e.currentTarget.dataset.size; document.getElementById('pen-size').value = penSize; updateDrawingTool(); }; });
             document.getElementById('stabilizer-toggle').onchange = (e) => { useStabilizer = e.target.checked; };
             window.addEventListener('keydown', (e) => {
@@ -690,122 +644,157 @@
             function updateDrawingTool() {
                 if (!canvas) return;
                 document.querySelectorAll('.pen-size-btn').forEach(btn => { btn.classList.toggle('active', parseFloat(btn.dataset.size) === parseFloat(penSize)); });
-                if (currentTool === 'eraser') { canvas.freeDrawingBrush.width = parseInt(eraserSize, 10); }
             }
             
-            // --- ADVANCED DRAWING LOGIC ---
+            // --- UNIFIED DRAWING & SHAPE LOGIC ---
             function handlePointerDown(e) {
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
-                if (currentTool !== 'draw') return;
                 e.preventDefault();
-                isDrawingPath = true;
+
                 const pointer = getPoint(e);
-                drawingPoints = [{ x: pointer.x, y: pointer.y, pressure: e.pressure }];
-            }
-            function handlePointerMove(e) {
-                if (!isDrawingPath) return;
-                e.preventDefault();
-                const pointer = getPoint(e);
-                drawingPoints.push({ x: pointer.x, y: pointer.y, pressure: e.pressure });
-                const ctx = canvas.contextTop;
-                ctx.save();
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.globalAlpha = 0.7;
-                ctx.beginPath();
-                ctx.moveTo(drawingPoints[0].x, drawingPoints[0].y);
-                for(let i = 1; i < drawingPoints.length; i++) {
-                    ctx.lineTo(drawingPoints[i].x, drawingPoints[i].y);
-                }
-                ctx.strokeStyle = brushColor;
-                ctx.lineWidth = parseFloat(penSize);
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.stroke();
-                ctx.restore();
-            }
-            function handlePointerUp(e) {
-                if (!isDrawingPath) return;
-                e.preventDefault();
-                isDrawingPath = false;
-                canvas.clearContext(canvas.contextTop);
-                if (drawingPoints.length > 1) {
-                    const path = createSmoothPath(drawingPoints);
-                    if (path) {
-                        canvas.add(path);
-                        saveState();
+                const shapeTools = ['rect', 'circle', 'triangle', 'line'];
+
+                if (currentTool === 'draw' || currentTool === 'eraser') {
+                    isDrawingPath = true;
+                    drawingPoints = [{ x: pointer.x, y: pointer.y, pressure: e.pressure }];
+                } else if (shapeTools.includes(currentTool)) {
+                    isDrawingShape = true;
+                    startPoint = pointer;
+                    const commonOptions = { 
+                        left: startPoint.x, top: startPoint.y, originX: 'left', originY: 'top', 
+                        stroke: brushColor, strokeWidth: parseInt(penSize, 10), fill: 'transparent', 
+                        selectable: false, evented: false, isShape: true 
+                    };
+                    switch(currentTool) {
+                        case 'line': shape = new fabric.Line([startPoint.x, startPoint.y, startPoint.x, startPoint.y], commonOptions); break;
+                        case 'rect': shape = new fabric.Rect({ ...commonOptions, width: 0, height: 0 }); break;
+                        case 'circle': shape = new fabric.Ellipse({ ...commonOptions, rx: 0, ry: 0 }); break;
+                        case 'triangle': shape = new fabric.Triangle({ ...commonOptions, width: 0, height: 0 }); break;
                     }
+                    if (shape) canvas.add(shape);
                 }
-                drawingPoints = [];
-            }
-            function getPoint(e) { return new fabric.Point(e.offsetX, e.offsetY); }
-            function createSmoothPath(points) {
-                if (points.length < 2) return null;
-                if (!useStabilizer) {
-                     return new fabric.Polyline(points, { fill: null, stroke: brushColor, strokeWidth: parseFloat(penSize), strokeLineCap: 'round', strokeLineJoin: 'round', originX: 'left', originY: 'top', selectable: false });
-                }
-                let pathString = `M ${points[0].x} ${points[0].y}`;
-                if (points.length === 2) {
-                    pathString += ` L ${points[1].x} ${points[1].y}`;
-                } else {
-                    let midPoint = {x: (points[0].x + points[1].x)/2, y: (points[0].y + points[1].y)/2};
-                    pathString += ` L ${midPoint.x} ${midPoint.y}`;
-                    for (let i = 1; i < points.length - 1; i++) {
-                        let p1 = points[i];
-                        let p2 = points[i+1];
-                        midPoint = {x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2};
-                        pathString += ` Q ${p1.x},${p1.y} ${midPoint.x},${midPoint.y}`;
-                    }
-                    let lastPoint = points[points.length - 1];
-                    pathString += ` L ${lastPoint.x} ${lastPoint.y}`;
-                }
-                return new fabric.Path(pathString, { fill: null, stroke: brushColor, strokeWidth: parseFloat(penSize), strokeLineCap: 'round', strokeLineJoin: 'round', originX: 'left', originY: 'top', selectable: false });
             }
 
-            // --- SHAPE DRAWING LOGIC ---
-            function handleMouseDown(o) {
-                const shapeTools = ['rect', 'circle', 'triangle', 'line'];
-                if (!shapeTools.includes(currentTool) || isDrawingShape) return;
-                isDrawingShape = true;
-                startPoint = canvas.getPointer(o.e);
-                const commonOptions = { left: startPoint.x, top: startPoint.y, originX: 'left', originY: 'top', stroke: brushColor, strokeWidth: parseInt(penSize, 10), fill: 'transparent', noScaleCache: true, selectable: false, isShape: true };
-                switch(currentTool) {
-                    case 'line': shape = new fabric.Line([startPoint.x, startPoint.y, startPoint.x, startPoint.y], commonOptions); break;
-                    case 'rect': shape = new fabric.Rect({ ...commonOptions, width: 0, height: 0 }); break;
-                    case 'circle': shape = new fabric.Ellipse({ ...commonOptions, rx: 0, ry: 0 }); break;
-                    case 'triangle': shape = new fabric.Triangle({ ...commonOptions, width: 0, height: 0 }); break;
+            function handlePointerMove(e) {
+                if (e.pointerType === 'mouse' && e.buttons !== 1) return; // Only move if primary button is down
+                e.preventDefault();
+                const pointer = getPoint(e);
+
+                if (isDrawingPath) {
+                    drawingPoints.push({ x: pointer.x, y: pointer.y, pressure: e.pressure });
+                    
+                    const ctx = canvas.contextTop;
+                    ctx.save();
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.globalAlpha = 0.7;
+                    ctx.beginPath();
+                    ctx.moveTo(drawingPoints[0].x, drawingPoints[0].y);
+                    for(let i = 1; i < drawingPoints.length; i++) {
+                        ctx.lineTo(drawingPoints[i].x, drawingPoints[i].y);
+                    }
+                    ctx.strokeStyle = brushColor;
+                    // Use correct size for pen vs eraser
+                    const currentSize = currentTool === 'eraser' ? eraserSize : penSize;
+                    ctx.lineWidth = parseFloat(currentSize);
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.stroke();
+                    ctx.restore();
+                } else if (isDrawingShape && shape) {
+                    if(currentTool === 'line') { 
+                        shape.set({ x2: pointer.x, y2: pointer.y }); 
+                    } else {
+                        let width = pointer.x - startPoint.x, height = pointer.y - startPoint.y;
+                        shape.set({ 
+                            width: Math.abs(width), 
+                            height: Math.abs(height), 
+                            originX: width > 0 ? 'left' : 'right', 
+                            originY: height > 0 ? 'top' : 'bottom' 
+                        });
+                        if (currentTool === 'circle') { 
+                            shape.set({ rx: Math.abs(width) / 2, ry: Math.abs(height) / 2 }); 
+                        }
+                    }
+                    canvas.requestRenderAll();
                 }
-                canvas.add(shape);
             }
-            function handleMouseMove(o) {
-                if (isDrawingPath) return; 
-                if (!isDrawingShape || !shape) return;
-                const pointer = canvas.getPointer(o.e);
-                if(currentTool === 'line') { shape.set({ x2: pointer.x, y2: pointer.y }); }
-                else {
-                    let width = pointer.x - startPoint.x, height = pointer.y - startPoint.y;
-                    shape.set({ width: Math.abs(width), height: Math.abs(height), originX: width > 0 ? 'left' : 'right', originY: height > 0 ? 'top' : 'bottom' });
-                    if (currentTool === 'circle') { shape.set({ rx: Math.abs(width) / 2, ry: Math.abs(height) / 2 }); }
-                }
-                canvas.renderAll();
-            }
-            function handleMouseUp(o) {
-                if(isDrawingShape) {
+
+            function handlePointerUp(e) {
+                e.preventDefault();
+
+                if (isDrawingPath) {
+                    isDrawingPath = false;
+                    canvas.clearContext(canvas.contextTop);
+                    if (drawingPoints.length > 1) {
+                        const path = createSmoothPath(drawingPoints);
+                        if (path) {
+                            canvas.add(path);
+                            saveState();
+                        }
+                    }
+                    drawingPoints = [];
+                } else if (isDrawingShape) {
                     isDrawingShape = false;
-                    shape.set({ selectable: (currentTool === 'select') });
-                    shape.setCoords(); saveState(); shape = null;
+                    if(shape) {
+                        shape.setCoords();
+                        saveState();
+                    }
+                    shape = null;
+                    setTool('select');
                 }
             }
+
+            function getPoint(e) { return canvas.getPointer(e); }
+            
+            function createSmoothPath(points) {
+                if (points.length < 2) return null;
+                const currentSize = currentTool === 'eraser' ? eraserSize : penSize;
+                const pathOptions = {
+                    fill: null, stroke: brushColor, strokeWidth: parseFloat(currentSize),
+                    strokeLineCap: 'round', strokeLineJoin: 'round', originX: 'left',
+                    originY: 'top', selectable: false, evented: false,
+                };
+
+                if (!useStabilizer || points.length < 3) {
+                    return new fabric.Polyline(points, pathOptions);
+                }
+
+                let path = [['M', points[0].x, points[0].y]];
+                for (let i = 1; i < points.length - 2; i++) {
+                    const midPoint = {
+                        x: (points[i].x + points[i + 1].x) / 2,
+                        y: (points[i].y + points[i + 1].y) / 2
+                    };
+                    path.push(['Q', points[i].x, points[i].y, midPoint.x, midPoint.y]);
+                }
+                path.push(['L', points[points.length - 1].x, points[points.length - 1].y]);
+
+                return new fabric.Path(path, pathOptions);
+            }
+
             function addText() {
                 setTool('select');
-                const text = new fabric.IText('Double-click to edit', { left: canvas.getCenter().left, top: canvas.getCenter().top, originX: 'center', originY: 'center', fill: brushColor, fontSize: 40, fontFamily: 'Inter', padding: 5 });
+                const text = new fabric.IText('Double-click to edit', { 
+                    left: canvas.getCenter().left, top: canvas.getCenter().top, 
+                    originX: 'center', originY: 'center', fill: activeColor, 
+                    fontSize: 40, fontFamily: 'Inter', padding: 5 
+                });
                 canvas.add(text).setActiveObject(text).renderAll(); text.enterEditing(); saveState();
             }
+
             function addImage(url) {
-                setTool('select');
                 fabric.Image.fromURL(url, (img) => {
                     img.scaleToWidth(canvas.width * 0.3);
-                    img.set({ left: canvas.getCenter().left, top: canvas.getCenter().top, originX: 'center', originY: 'center', cornerColor: '#3B82F6', cornerSize: 10, transparentCorners: false });
-                    canvas.add(img).setActiveObject(img).renderAll(); saveState();
+                    img.set({ 
+                        left: canvas.getCenter().left, top: canvas.getCenter().top, 
+                        originX: 'center', originY: 'center', 
+                        cornerColor: '#3B82F6', cornerSize: 10, transparentCorners: false 
+                    });
+                    
+                    canvas.add(img);
+                    setTool('select');
+                    canvas.setActiveObject(img).renderAll(); 
+                    saveState();
                 }, { crossOrigin: 'anonymous' });
             }
 
@@ -814,21 +803,27 @@
             function redo() { const slide = slides[currentSlideIndex]; if (slide && slide.historyIndex < slide.history.length - 1) { slide.historyIndex++; loadState(slide.history[slide.historyIndex]); } }
             
             function populateColorPalette() {
-                const palette = document.getElementById('color-palette'); palette.innerHTML = ''; const colors = isDarkMode ? darkColors : lightColors;
+                const palette = document.getElementById('color-palette'); palette.innerHTML = ''; 
+                const colors = isDarkMode ? darkColors : lightColors;
                 colors.forEach(color => {
                     const btn = document.createElement('button');
-                    const normalizedBrushColor = new fabric.Color(brushColor).toHex().toLowerCase();
+                    const normalizedActiveColor = new fabric.Color(activeColor).toHex().toLowerCase();
                     const normalizedBtnColor = new fabric.Color(color).toHex().toLowerCase();
-                    btn.className = `color-btn w-6 h-6 rounded-full border-2 border-transparent ${normalizedBtnColor === normalizedBrushColor ? 'active' : ''}`;
+                    btn.className = `color-btn w-6 h-6 rounded-full border-2 border-transparent ${normalizedBtnColor === normalizedActiveColor ? 'active' : ''}`;
                     btn.style.backgroundColor = color;
                     btn.onclick = () => {
-                        brushColor = color; updateDrawingTool(); populateColorPalette();
+                        activeColor = color; 
+                        if (currentTool === 'draw' || currentTool === 'line' || currentTool === 'rect' || currentTool === 'circle' || currentTool === 'triangle') {
+                            brushColor = activeColor;
+                        }
+                        populateColorPalette();
+
                         const activeObjects = canvas.getActiveObjects();
                         if (activeObjects.length > 0) {
                             activeObjects.forEach(obj => {
-                                if (obj.isMath) { obj.set('fill', brushColor); obj.getObjects('path').forEach(path => path.set({ fill: brushColor, stroke: brushColor })); } 
-                                else if (obj.type === 'i-text') { obj.set('fill', brushColor); }
-                                else if (obj.stroke) { obj.set('stroke', brushColor); }
+                                if (obj.isMath) { obj.set('fill', activeColor); obj.getObjects('path').forEach(path => path.set({ fill: activeColor, stroke: activeColor })); } 
+                                else if (obj.type === 'i-text') { obj.set('fill', activeColor); }
+                                else if (obj.stroke) { obj.set('stroke', activeColor); }
                             });
                             canvas.renderAll(); saveState();
                         }
@@ -839,22 +834,53 @@
             async function toggleDarkMode() {
                 saveCurrentSlideState();
                 isDarkMode = !isDarkMode; document.documentElement.classList.toggle('dark', isDarkMode);
-                const fromColors = isDarkMode ? lightColors : darkColors; const toColors = isDarkMode ? darkColors : lightColors;
-                const colorMap = new Map(); fromColors.forEach((color, index) => { colorMap.set(new fabric.Color(color).toHex().toLowerCase(), toColors[index]); });
-                const normalizedBrushColor = new fabric.Color(brushColor).toHex().toLowerCase(); if (colorMap.has(normalizedBrushColor)) { brushColor = colorMap.get(normalizedBrushColor); }
+                
+                const fromColors = isDarkMode ? lightColors : darkColors; 
+                const toColors = isDarkMode ? darkColors : lightColors;
+                const colorMap = new Map(); 
+                fromColors.forEach((color, index) => { colorMap.set(new fabric.Color(color).toHex().toLowerCase(), toColors[index]); });
+                
+                const normalizedActiveColor = new fabric.Color(activeColor).toHex().toLowerCase(); 
+                if (colorMap.has(normalizedActiveColor)) { 
+                    activeColor = colorMap.get(normalizedActiveColor); 
+                }
+
                 showModal('Updating Theme', '<p>Applying new theme to all slides...</p>', null);
+                
                 for (const slide of slides) {
                     if (!slide.data.objects) continue;
                     slide.data.objects.forEach(obj => {
-                        const processColor = (prop) => { const currentColor = obj[prop]; if (typeof currentColor === 'string' && currentColor !== 'transparent') { const normalizedColor = new fabric.Color(currentColor).toHex().toLowerCase(); if (colorMap.has(normalizedColor)) { obj[prop] = colorMap.get(normalizedColor); } } };
-                        if (obj.isMath || obj.type === 'i-text' || (obj.type === 'group' && obj.isMath)) { processColor('fill'); } else { processColor('fill'); processColor('stroke'); }
+                        const processColor = (prop) => { 
+                            const currentColor = obj[prop]; 
+                            if (typeof currentColor === 'string' && currentColor !== 'transparent') { 
+                                const normalizedColor = new fabric.Color(currentColor).toHex().toLowerCase(); 
+                                if (colorMap.has(normalizedColor)) { 
+                                    obj[prop] = colorMap.get(normalizedColor); 
+                                } 
+                            } 
+                        };
+                        if (obj.isMath || obj.type === 'i-text' || (obj.type === 'group' && obj.isMath)) { 
+                            processColor('fill'); 
+                        } else { 
+                            processColor('fill'); processColor('stroke'); 
+                        }
                     });
                     slide.data.background = isDarkMode ? '#1f2937' : '#ffffff';
-                    if (slide.historyIndex > -1 && slide.history[slide.historyIndex]) { slide.history[slide.historyIndex] = slide.data; }
+                    if (slide.historyIndex > -1 && slide.history[slide.historyIndex]) { 
+                        slide.history[slide.historyIndex] = slide.data; 
+                    }
                 }
+                
                 const currentSlide = slides[currentSlideIndex];
-                if (currentSlide) { loadState(currentSlide.data, () => { canvas.setBackgroundColor(isDarkMode ? '#1f2937' : '#ffffff', canvas.renderAll.bind(canvas)); }); }
-                populateColorPalette(); updateDrawingTool(); hideModal();
+                if (currentSlide) { 
+                    loadState(currentSlide.data, () => { 
+                        canvas.setBackgroundColor(isDarkMode ? '#1f2937' : '#ffffff', canvas.renderAll.bind(canvas)); 
+                    }); 
+                }
+                
+                populateColorPalette(); 
+                setTool(currentTool); // Refresh tool to update eraser color and cursor
+                hideModal();
             }
             async function exportToPDF() {
                 const { jsPDF } = window.jspdf; saveCurrentSlideState();
@@ -877,8 +903,14 @@
             }
 
             // --- LET'S GO ---
-            if (isDarkMode) { document.documentElement.classList.add('dark'); brushColor = '#FFFFFF'; }
-            initCanvas(); initSlides(); setTool('draw'); populateColorPalette();
+            if (isDarkMode) { 
+                document.documentElement.classList.add('dark'); 
+                activeColor = '#FFFFFF';
+            }
+            initCanvas(); 
+            initSlides(); 
+            setTool('draw'); 
+            populateColorPalette();
         });
     </script>
 </body>

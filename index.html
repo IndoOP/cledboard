@@ -29,7 +29,7 @@
         .canvas-container { border-radius: 0.5rem; touch-action: none; }
         .tool-btn, .color-btn, .slide-thumb, .pen-size-btn { transition: all 0.2s ease-in-out; }
         .tool-btn.active, .pen-size-btn.active { background-color: #3b82f6; color: white; }
-        .color-btn.active { box-shadow: 0 0 0 3px #3b82f6; }
+        .color-btn.active { box-shadow: 0 0 0 3px #3b82f6; transform: scale(1.1); }
         .dark .tool-btn.active, .dark .pen-size-btn.active { background-color: #60a5fa; color: #1f2937; }
         .dark .color-btn.active { box-shadow: 0 0 0 3px #60a5fa; }
         
@@ -88,7 +88,7 @@
                 <div class="flex items-center space-x-2 flex-wrap">
                     <button id="select-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Select (V)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
                     <button id="draw-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 active" title="Pencil (B)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
-                    <button id="eraser-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Eraser (E)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.24 7.76a4 4 0 0 0-5.66-5.66l-12 12L2 22l7.76-1.76Z"/><path d="m14 6 6 6"/><path d="M16 14H6"/></svg></button>
+                    <button id="stroke-eraser-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Stroke Eraser (E)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.36 2.64A2.5 2.5 0 0 1 22 4.5V6a2 2 0 0 1-2 2h-4.5a2 2 0 0 1-2-2V4.5a2.5 2.5 0 0 1 2.64-1.86Z"/><path d="m21 14-9-9"/><path d="M12.34 9.66 3 19"/><path d="M3 19c-2 2-2 5 0 7s5 2 7 0"/></svg></button>
                     <button id="line-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Line (L)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/></svg></button>
                     <button id="rect-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Rectangle (R)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg></button>
                     <button id="circle-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Circle (C)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg></button>
@@ -99,7 +99,6 @@
                     <input type="file" id="pdf-input" class="hidden" accept="application/pdf">
                     <button id="image-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Add Image (I)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></button>
                     <input type="file" id="image-input" class="hidden" accept="image/*">
-                    <button id="delete-tool" class="tool-btn p-2 rounded-md hover:bg-red-500 hover:text-white dark:hover:bg-red-600" title="Delete (Delete/Backspace)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
                 </div>
                 <div class="flex items-center space-x-2 flex-wrap border-l border-gray-300 dark:border-gray-600 pl-2 ml-2">
                     <button id="explain-tool" class="tool-btn p-2 rounded-md hover:bg-purple-200 dark:hover:bg-purple-700 flex items-center space-x-1" title="✨ Explain This">
@@ -110,7 +109,7 @@
                     </button>
                 </div>
                 <div class="flex items-center space-x-2 flex-wrap border-l border-gray-300 dark:border-gray-600 pl-2 ml-2" id="tool-settings">
-                     <div class="flex items-center space-x-2"><label for="pen-size" class="text-sm">Pen:</label><input type="range" id="pen-size" min="1" max="50" value="3.5" class="w-20" title="Pen Thickness"><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="3.5" title="Small Pen">S</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="5" title="Medium Pen">M</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="10" title="Large Pen">L</button></div>
+                     <div class="flex items-center space-x-2"><label for="pen-size" class="text-sm">Pen:</label><input type="range" id="pen-size" min="1" max="50" value="5" class="w-20" title="Pen Thickness"><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="2" title="Extra Small Pen">XS</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="5" title="Small Pen">S</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="10" title="Medium Pen">M</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="20" title="Large Pen">L</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="35" title="Extra Large Pen">XL</button></div>
                     <div class="flex items-center space-x-1"><input type="checkbox" id="stabilizer-toggle" class="w-4 h-4 rounded" checked><label for="stabilizer-toggle" class="text-sm cursor-pointer" title="Smooth Drawing">Stabilizer</label></div>
                     <div class="flex items-center space-x-2"><label for="eraser-size" class="text-sm">Eraser:</label><input type="range" id="eraser-size" min="1" max="100" value="20" class="w-20" title="Eraser Thickness"></div>
                     <div class="flex items-center space-x-2" id="color-palette"></div>
@@ -145,9 +144,9 @@
             // --- STATE MANAGEMENT ---
             let canvas;
             let currentTool = 'draw';
-            let activeColor = '#000000'; // The user-selected color
-            let brushColor = '#000000';  // The actual color being used (can be activeColor or background for eraser)
-            let penSize = 3.5;
+            let activeColor = '#111827';
+            let brushColor = '#111827';
+            let penSize = 5;
             let eraserSize = 20;
             let useStabilizer = true;
 
@@ -166,11 +165,11 @@
             
             let draggedSlideIndex = null;
             
-            const HISTORY_LIMIT = 30; // NEW: Limit the number of history states
+            const HISTORY_LIMIT = 30;
 
-            const lightColors = ['#000000', '#EF4444', '#F97316', '#EAB308', '#22C55E', '#3B82F6', '#8B5CF6'];
-            const darkColors =  ['#FFFFFF', '#FCA5A5', '#FDBA74', '#FDE047', '#86EFAC', '#93C5FD', '#C4B5FD'];
-            const customProps = ['isMath', 'isShape', 'sourceData', 'isEraser'];
+            const lightColors = ['#111827', '#DC2626', '#DB2777', '#9333EA', '#2563EB', '#059669', '#F59E0B'];
+            const darkColors =  ['#F9FAFB', '#F87171', '#F472B6', '#C084FC', '#60A5FA', '#34D399', '#FBBF24'];
+            const customProps = ['isMath', 'isShape', 'sourceData', 'isEraser', 'isPdfImage', 'isPdfInverted'];
 
             // --- INITIALIZATION ---
             function initCanvas() {
@@ -192,6 +191,9 @@
                 resizeCanvas();
             }
             
+            /**
+             * [MODIFIED] Sets up event listeners, including the new 'beforeunload' handler.
+             */
             function setupEventListeners() {
                 canvas.on('object:modified', () => saveState());
                 
@@ -203,6 +205,23 @@
                 
                 window.addEventListener('paste', handlePaste);
                 window.addEventListener('resize', resizeCanvas);
+                // NEW: Add listener for closing the tab
+                window.addEventListener('beforeunload', handleBeforeUnload);
+            }
+
+            /**
+             * [NEW] Handles the 'beforeunload' event to prevent accidental closing.
+             */
+            function handleBeforeUnload(e) {
+                // Check if there is more than one slide, or if the single slide is not empty.
+                const hasContent = slides.length > 1 || (slides.length === 1 && canvas.getObjects().length > 0);
+
+                if (hasContent) {
+                    // Standard way to trigger the browser's confirmation dialog.
+                    e.preventDefault();
+                    // Required for Chrome and other modern browsers.
+                    e.returnValue = '';
+                }
             }
 
             function resizeCanvas() {
@@ -220,6 +239,11 @@
                 }
             }
             
+            function createCursor(svgPath, color) {
+                const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='${color}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${svgPath}</svg>`;
+                return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
+            }
+
             function setTool(tool) {
                 currentTool = tool;
                 const isSelectTool = tool === 'select';
@@ -229,24 +253,28 @@
                 canvas.selection = isSelectTool;
 
                 canvas.forEachObject(obj => {
-                    obj.selectable = isSelectTool;
-                    obj.evented = isSelectTool;
+                    if (obj.isPdfImage) {
+                        obj.selectable = false;
+                        obj.evented = false;
+                    } else {
+                        obj.selectable = isSelectTool;
+                        obj.evented = isSelectTool;
+                    }
                 });
 
                 if (tool === 'draw' || shapeTools.includes(tool)) {
                     brushColor = activeColor;
-                } else if (tool === 'eraser') {
-                    brushColor = isDarkMode ? '#1f2937' : '#ffffff';
                 }
 
+                const cursorColor = isDarkMode ? 'white' : 'black';
                 if (tool === 'draw') {
-                    const pencilCursor = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/></svg>\") 4 20, auto";
-                    canvas.defaultCursor = pencilCursor;
-                    canvas.hoverCursor = pencilCursor;
-                } else if (tool === 'eraser') {
-                    const eraserCursor = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='18' height='18' rx='2' ry='2' fill='white' /></svg>\") 12 12, auto";
-                    canvas.defaultCursor = eraserCursor;
-                    canvas.hoverCursor = eraserCursor;
+                    const pencilPath = `<path d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/>`;
+                    canvas.defaultCursor = `${createCursor(pencilPath, cursorColor)} 4 20, auto`;
+                    canvas.hoverCursor = `${createCursor(pencilPath, cursorColor)} 4 20, auto`;
+                } else if (tool === 'stroke-eraser') {
+                    const eraserPath = `<path d='M19.36 2.64A2.5 2.5 0 0 1 22 4.5V6a2 2 0 0 1-2 2h-4.5a2 2 0 0 1-2-2V4.5a2.5 2.5 0 0 1 2.64-1.86Z'/><path d='m21 14-9-9'/><path d='M12.34 9.66 3 19'/><path d='M3 19c-2 2-2 5 0 7s5 2 7 0'/>`;
+                    canvas.defaultCursor = `${createCursor(eraserPath, cursorColor)} 4 4, auto`;
+                    canvas.hoverCursor = `${createCursor(eraserPath, cursorColor)} 4 4, auto`;
                 } else if (shapeTools.includes(tool)) {
                     canvas.defaultCursor = 'crosshair';
                     canvas.hoverCursor = 'crosshair';
@@ -280,8 +308,13 @@
                         if (obj.isMath && obj.sourceData) {
                              rerenderMath(obj);
                         }
-                        obj.selectable = isSelectTool;
-                        obj.evented = isSelectTool;
+                        if (obj.isPdfImage) {
+                            obj.selectable = false;
+                            obj.evented = false;
+                        } else {
+                            obj.selectable = isSelectTool;
+                            obj.evented = isSelectTool;
+                        }
                     });
                     canvas.renderAll();
                     if (callback) callback();
@@ -314,10 +347,6 @@
                 });
             }
 
-            /**
-             * [MODIFIED] Saves the canvas state and manages history size.
-             * Now limits the undo/redo history to the value of HISTORY_LIMIT.
-             */
             function saveState() {
                 const currentSlide = slides[currentSlideIndex];
                 if (!currentSlide) return;
@@ -335,10 +364,9 @@
                 currentSlide.history.push(slideData);
                 currentSlide.historyIndex++;
                 
-                // NEW: Enforce history limit
                 if (currentSlide.history.length > HISTORY_LIMIT) {
-                    currentSlide.history.shift(); // Remove the oldest state
-                    currentSlide.historyIndex--;  // Adjust the index to match
+                    currentSlide.history.shift();
+                    currentSlide.historyIndex--;
                 }
 
                 slides[currentSlideIndex].data = slideData;
@@ -549,23 +577,30 @@
                     for (let i = 1; i <= numPages; i++) {
                         document.getElementById('pdf-import-progress').textContent = `Processing page ${i} of ${numPages}...`;
                         const page = await pdf.getPage(i);
-                        const viewport = page.getViewport({ scale: 1 });
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        
                         const scale = Math.min(canvas.width / viewport.width, canvas.height / viewport.height);
-                        const scaledViewport = page.getViewport({ scale });
+                        
                         const tempCanvas = document.createElement('canvas');
                         const tempCtx = tempCanvas.getContext('2d');
-                        tempCanvas.width = scaledViewport.width;
-                        tempCanvas.height = scaledViewport.height;
-                        await page.render({ canvasContext: tempCtx, viewport: scaledViewport }).promise;
+                        tempCanvas.width = viewport.width;
+                        tempCanvas.height = viewport.height;
+
+                        await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
                         const imgDataUrl = tempCanvas.toDataURL('image/png');
+                        
                         const slideJson = {
                             version: fabric.version,
                             objects: [{
                                 type: 'image', version: '5.3.1', originX: 'center', originY: 'center',
                                 left: canvas.width / 2, top: canvas.height / 2,
-                                width: scaledViewport.width, height: scaledViewport.height, src: imgDataUrl,
+                                width: viewport.width, height: viewport.height, src: imgDataUrl,
+                                scaleX: scale, scaleY: scale,
                                 crossOrigin: 'anonymous', 
-                                selectable: (currentTool === 'select'), evented: (currentTool === 'select')
+                                selectable: false,
+                                evented: false,
+                                isPdfImage: true,
+                                isPdfInverted: false
                             }],
                             background: isDarkMode ? '#1f2937' : '#ffffff'
                         };
@@ -609,7 +644,7 @@
             // --- UI BINDINGS ---
             document.getElementById('select-tool').onclick = () => setTool('select');
             document.getElementById('draw-tool').onclick = () => setTool('draw');
-            document.getElementById('eraser-tool').onclick = () => setTool('eraser');
+            document.getElementById('stroke-eraser-tool').onclick = () => setTool('stroke-eraser');
             document.getElementById('line-tool').onclick = () => setTool('line');
             document.getElementById('rect-tool').onclick = () => setTool('rect');
             document.getElementById('circle-tool').onclick = () => setTool('circle');
@@ -617,7 +652,6 @@
             document.getElementById('text-tool').onclick = () => addText();
             document.getElementById('image-tool').onclick = () => document.getElementById('image-input').click();
             document.getElementById('image-input').onchange = (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => addImage(event.target.result); reader.readAsDataURL(file); } e.target.value = null; };
-            document.getElementById('delete-tool').onclick = deleteSelected;
             document.getElementById('undo-btn').onclick = undo;
             document.getElementById('redo-btn').onclick = redo;
             document.getElementById('export-pdf-btn').onclick = exportToPDF;
@@ -637,7 +671,7 @@
                 if (document.getElementById('modal').classList.contains('visible')) { if (e.key === 'Escape') hideModal(); if (e.key === 'Enter') { if (document.getElementById('latex-input')) { e.preventDefault(); insertMath(); } if (document.getElementById('brainstorm-input')) { e.preventDefault(); handleBrainstorm(); } } return; }
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || canvas.getActiveObject()?.isEditing) return;
                 if (e.ctrlKey || e.metaKey) { if (e.key === 'z') { e.preventDefault(); undo(); } else if (e.key === 'y') { e.preventDefault(); redo(); } } 
-                else { switch (e.key.toLowerCase()) { case 'b': setTool('draw'); break; case 'e': setTool('eraser'); break; case 'v': setTool('select'); break; case 'l': setTool('line'); break; case 'r': setTool('rect'); break; case 'c': setTool('circle'); break; case 't': addText(); break; case 'm': showMathModal(); break; case 'i': document.getElementById('image-input').click(); break; case 'delete': case 'backspace': deleteSelected(); break; } }
+                else { switch (e.key.toLowerCase()) { case 'b': setTool('draw'); break; case 'e': setTool('stroke-eraser'); break; case 'v': setTool('select'); break; case 'l': setTool('line'); break; case 'r': setTool('rect'); break; case 'c': setTool('circle'); break; case 't': addText(); break; case 'm': showMathModal(); break; case 'i': document.getElementById('image-input').click(); break; case 'delete': case 'backspace': deleteSelected(); break; } }
             });
             function updateDrawingTool() {
                 if (!canvas) return;
@@ -648,7 +682,7 @@
             
             function handlePointerDown(e) {
                 const shapeTools = ['rect', 'circle', 'triangle', 'line'];
-                if (currentTool !== 'draw' && currentTool !== 'eraser' && !shapeTools.includes(currentTool)) {
+                if (currentTool !== 'draw' && currentTool !== 'stroke-eraser' && !shapeTools.includes(currentTool)) {
                     return;
                 }
 
@@ -657,10 +691,12 @@
 
                 const pointer = getPoint(e);
 
-                if (currentTool === 'draw' || currentTool === 'eraser') {
+                if (currentTool === 'draw' || currentTool === 'stroke-eraser') {
                     isDrawingPath = true;
-                    smoothedPoint = { x: pointer.x, y: pointer.y };
-                    drawingPoints = [{ x: pointer.x, y: pointer.y }];
+                    if (currentTool === 'draw') {
+                        smoothedPoint = { x: pointer.x, y: pointer.y };
+                        drawingPoints = [{ x: pointer.x, y: pointer.y }];
+                    }
                 } else if (shapeTools.includes(currentTool)) {
                     isDrawingShape = true;
                     startPoint = pointer;
@@ -685,6 +721,19 @@
                 e.preventDefault();
                 const pointer = getPoint(e);
 
+                if (currentTool === 'stroke-eraser' && isDrawingPath) {
+                    const erasableTypes = ['path', 'line', 'rect', 'ellipse', 'triangle', 'circle'];
+                    const objects = canvas.getObjects();
+                    for (let i = objects.length - 1; i >= 0; i--) {
+                        const obj = objects[i];
+                        if (obj && erasableTypes.includes(obj.type) && obj.containsPoint(pointer)) {
+                           canvas.remove(obj);
+                        }
+                    }
+                    canvas.requestRenderAll();
+                    return;
+                }
+
                 if (isDrawingPath) {
                     if (useStabilizer) {
                         smoothedPoint.x = smoothingFactor * smoothedPoint.x + (1 - smoothingFactor) * pointer.x;
@@ -699,8 +748,7 @@
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.globalAlpha = 0.7;
                     ctx.strokeStyle = brushColor;
-                    const currentSize = currentTool === 'eraser' ? eraserSize : penSize;
-                    ctx.lineWidth = parseFloat(currentSize);
+                    ctx.lineWidth = parseFloat(penSize);
                     ctx.lineCap = 'round';
                     ctx.lineJoin = 'round';
                     ctx.beginPath();
@@ -742,26 +790,21 @@
 
                 if (isDrawingPath) {
                     canvas.clearContext(canvas.contextTop);
-                    if (drawingPoints.length < 2) {
-                        const point = drawingPoints[0] || getPoint(e);
-                        const dotSize = currentTool === 'eraser' ? eraserSize : penSize;
-                        const dotOptions = {
-                            left: point.x, top: point.y,
-                            radius: parseFloat(dotSize) / 2, fill: brushColor,
-                            originX: 'center', originY: 'center',
-                            selectable: false, evented: false,
-                        };
-                        
-                        if (currentTool === 'eraser') {
-                            dotOptions.isEraser = true;
-                        }
-
-                        const dot = new fabric.Circle(dotOptions);
-                        canvas.add(dot);
-                    } else {
-                        const path = createSmoothPath(drawingPoints);
-                        if (path) {
-                            canvas.add(path);
+                    if (currentTool === 'draw') {
+                        if (drawingPoints.length < 2) {
+                            const point = drawingPoints[0] || getPoint(e);
+                            const dot = new fabric.Circle({
+                                left: point.x, top: point.y,
+                                radius: parseFloat(penSize) / 2, fill: brushColor,
+                                originX: 'center', originY: 'center',
+                                selectable: false, evented: false,
+                            });
+                            canvas.add(dot);
+                        } else {
+                            const path = createSmoothPath(drawingPoints);
+                            if (path) {
+                                canvas.add(path);
+                            }
                         }
                     }
                     saveState();
@@ -783,23 +826,18 @@
             
             function createSmoothPath(points) {
                 if (points.length < 2) return null;
-                const currentSize = currentTool === 'eraser' ? eraserSize : penSize;
                 const pathOptions = {
-                    fill: null, stroke: brushColor, strokeWidth: parseFloat(currentSize),
+                    fill: null, stroke: brushColor, strokeWidth: parseFloat(penSize),
                     strokeLineCap: 'round', strokeLineJoin: 'round', originX: 'left',
                     originY: 'top', selectable: false, evented: false,
                     strokeUniform: true
                 };
 
-                if (currentTool === 'eraser') {
-                    pathOptions.isEraser = true;
-                }
-
                 let path = [['M', points[0].x, points[0].y]];
                 for (let i = 1; i < points.length - 2; i++) {
                     const midPoint = {
-                        x: (points[i].x + points[i + 1].x) / 2,
-                        y: (points[i].y + points[i + 1].y) / 2
+                        x: (drawingPoints[i].x + drawingPoints[i + 1].x) / 2,
+                        y: (drawingPoints[i].y + drawingPoints[i + 1].y) / 2
                     };
                     path.push(['Q', points[i].x, points[i].y, midPoint.x, midPoint.y]);
                 }
@@ -845,7 +883,7 @@
                     const btn = document.createElement('button');
                     const normalizedActiveColor = new fabric.Color(activeColor).toHex().toLowerCase();
                     const normalizedBtnColor = new fabric.Color(color).toHex().toLowerCase();
-                    btn.className = `color-btn w-6 h-6 rounded-full border-2 border-transparent ${normalizedBtnColor === normalizedActiveColor ? 'active' : ''}`;
+                    btn.className = `color-btn w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600 ${normalizedBtnColor === normalizedActiveColor ? 'active' : ''}`;
                     btn.style.backgroundColor = color;
                     btn.onclick = () => {
                         activeColor = color; 
@@ -859,7 +897,7 @@
                             activeObjects.forEach(obj => {
                                 if (obj.isMath) { obj.set('fill', activeColor); obj.getObjects('path').forEach(path => path.set({ fill: activeColor, stroke: activeColor })); } 
                                 else if (obj.type === 'i-text') { obj.set('fill', activeColor); }
-                                else if (obj.stroke) { obj.set('stroke', activeColor); }
+                                else if (obj.stroke && !obj.isEraser) { obj.set('stroke', activeColor); }
                             });
                             canvas.renderAll(); saveState();
                         }
@@ -870,72 +908,105 @@
 
             async function toggleDarkMode() {
                 saveCurrentSlideState();
-                isDarkMode = !isDarkMode; document.documentElement.classList.toggle('dark', isDarkMode);
+                const hasPdf = slides.some(s => s.data.objects.some(o => o.isPdfImage));
                 
-                const fromColors = isDarkMode ? lightColors : darkColors; 
-                const toColors = isDarkMode ? darkColors : lightColors;
-                const colorMap = new Map(); 
-                fromColors.forEach((color, index) => { colorMap.set(new fabric.Color(color).toHex().toLowerCase(), toColors[index]); });
-                
-                const normalizedActiveColor = new fabric.Color(activeColor).toHex().toLowerCase(); 
-                if (colorMap.has(normalizedActiveColor)) { 
-                    activeColor = colorMap.get(normalizedActiveColor); 
-                }
-
-                showModal('Updating Theme', '<p>Applying new theme to all slides...</p>', null);
-                
-                const newBgColor = isDarkMode ? '#1f2937' : '#ffffff';
-
-                for (const slide of slides) {
-                    if (!slide.data.objects) continue;
-                    slide.data.objects.forEach(obj => {
-                        if (obj.isEraser) {
-                            const propToChange = obj.type === 'path' ? 'stroke' : 'fill';
-                            obj[propToChange] = newBgColor;
-                        } else {
-                            const processColor = (prop) => { 
-                                const currentColor = obj[prop]; 
-                                if (typeof currentColor === 'string' && currentColor !== 'transparent' && currentColor !== null) { 
-                                    const normalizedColor = new fabric.Color(currentColor).toHex().toLowerCase(); 
-                                    if (colorMap.has(normalizedColor)) { 
-                                        obj[prop] = colorMap.get(normalizedColor); 
-                                    } 
-                                } 
-                            };
-                            if (obj.isMath || (obj.type === 'group' && obj.isMath)) { 
-                                processColor('fill');
-                                if (obj.objects) {
-                                    obj.objects.forEach(path => path.set({ fill: obj.fill, stroke: obj.fill }));
-                                }
-                            } else if (obj.type === 'i-text') {
-                                processColor('fill');
-                            } else { 
-                                processColor('fill'); processColor('stroke'); 
-                            }
-                        }
-                    });
-                    slide.data.background = newBgColor;
-                    if (slide.historyIndex > -1 && slide.history[slide.historyIndex]) { 
-                        slide.history[slide.historyIndex] = slide.data; 
+                const performToggle = (invertPdfs) => {
+                    isDarkMode = !isDarkMode;
+                    document.documentElement.classList.toggle('dark', isDarkMode);
+                    
+                    const fromColors = isDarkMode ? lightColors : darkColors;
+                    const toColors = isDarkMode ? darkColors : lightColors;
+                    const colorMap = new Map();
+                    fromColors.forEach((color, index) => { colorMap.set(new fabric.Color(color).toHex().toLowerCase(), toColors[index]); });
+                    
+                    const normalizedActiveColor = new fabric.Color(activeColor).toHex().toLowerCase();
+                    if (colorMap.has(normalizedActiveColor)) {
+                        activeColor = colorMap.get(normalizedActiveColor);
+                    } else {
+                        activeColor = isDarkMode ? '#F9FAFB' : '#111827';
                     }
+
+                    showModal('Updating Theme', '<p>Applying new theme to all slides...</p>', null);
+                    
+                    const newBgColor = isDarkMode ? '#1f2937' : '#ffffff';
+
+                    for (const slide of slides) {
+                        if (!slide.data.objects) continue;
+                        slide.data.objects.forEach(obj => {
+                            if (obj.isPdfImage && invertPdfs) {
+                                obj.isPdfInverted = !obj.isPdfInverted;
+                                // BUGFIX: Use JSON representation for filters when modifying JSON data
+                                obj.filters = obj.isPdfInverted ? [{ type: 'Invert' }] : [];
+                            } else if (obj.isEraser) {
+                                const propToChange = obj.type === 'path' ? 'stroke' : 'fill';
+                                obj[propToChange] = newBgColor;
+                            } else {
+                                const processColor = (prop) => {
+                                    const currentColor = obj[prop];
+                                    if (typeof currentColor === 'string' && currentColor !== 'transparent' && currentColor !== null) {
+                                        const normalizedColor = new fabric.Color(currentColor).toHex().toLowerCase();
+                                        if (colorMap.has(normalizedColor)) {
+                                            obj[prop] = colorMap.get(normalizedColor);
+                                        }
+                                    }
+                                };
+                                if (obj.isMath || (obj.type === 'group' && obj.isMath)) {
+                                    processColor('fill');
+                                    if (obj.objects) {
+                                        obj.objects.forEach(path => {
+                                            // BUGFIX: Modify plain JS object properties, not fabric instances
+                                            path.fill = obj.fill;
+                                            path.stroke = obj.fill;
+                                        });
+                                    }
+                                } else if (obj.type === 'i-text') {
+                                    processColor('fill');
+                                } else {
+                                    processColor('fill'); processColor('stroke');
+                                }
+                            }
+                        });
+                        slide.data.background = newBgColor;
+                        if (slide.historyIndex > -1 && slide.history[slide.historyIndex]) {
+                            slide.history[slide.historyIndex] = slide.data;
+                        }
+                    }
+                    
+                    const currentSlide = slides[currentSlideIndex];
+                    if (currentSlide) {
+                        loadState(currentSlide.data, () => {
+                            canvas.getObjects().forEach(obj => {
+                                if (obj.isPdfImage) {
+                                    obj.applyFilters();
+                                }
+                            });
+                            canvas.setBackgroundColor(newBgColor, canvas.renderAll.bind(canvas));
+                            // BUGFIX: Hide modal after async operation completes
+                            hideModal();
+                        });
+                    } else {
+                        // Hide modal if there are no slides
+                        hideModal();
+                    }
+                    
+                    populateColorPalette();
+                    setTool(currentTool);
+                };
+
+                if (hasPdf) {
+                    showModal(
+                        "Invert PDF Colors?",
+                        "<p>Invert the colors of imported PDFs for better contrast in the new theme?</p>",
+                        createDialogButtons(
+                            { text: 'No', action: () => { hideModal(); performToggle(false); }, class: 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500' },
+                            { text: 'Yes, Invert', action: () => { hideModal(); performToggle(true); }, class: 'bg-blue-500 text-white hover:bg-blue-600' }
+                        )
+                    );
+                } else {
+                    performToggle(false);
                 }
-                
-                const currentSlide = slides[currentSlideIndex];
-                if (currentSlide) { 
-                    loadState(currentSlide.data, () => { 
-                        canvas.setBackgroundColor(newBgColor, canvas.renderAll.bind(canvas)); 
-                    }); 
-                }
-                
-                populateColorPalette(); 
-                setTool(currentTool);
-                hideModal();
             }
 
-            /**
-             * [NEW] Helper function to re-render a math object on a given canvas.
-             * This is needed for the PDF export to correctly render math SVGs.
-             */
             async function renderMathForExport(mathObj, targetCanvas) {
                 const latex = mathObj.sourceData;
                 const targetColor = mathObj.fill;
@@ -943,7 +1014,6 @@
                 const node = await MathJax.tex2svgPromise(latex, { display: true });
                 const svgData = new XMLSerializer().serializeToString(node.querySelector('svg'));
                 
-                // This returns a promise that resolves when the SVG is loaded and added
                 return new Promise(resolve => {
                     fabric.loadSVGFromString(svgData, (objects, options) => {
                         objects.forEach(part => {
@@ -963,10 +1033,6 @@
                 });
             }
 
-            /**
-             * [MODIFIED] Exports the whiteboard slides to a PDF.
-             * Now correctly renders MathJax expressions before adding them to the PDF.
-             */
             async function exportToPDF() {
                 const { jsPDF } = window.jspdf; 
                 saveCurrentSlideState();
@@ -989,21 +1055,24 @@
 
                     await new Promise(resolve => {
                        tempCanvas.loadFromJSON(slideData, async () => {
-                           // Find all math objects and create promises to re-render them
                            const mathObjects = tempCanvas.getObjects().filter(obj => obj.isMath);
                            const renderingPromises = mathObjects.map(obj => renderMathForExport(obj, tempCanvas));
                            
-                           // Wait for all math objects to be fully rendered
                            await Promise.all(renderingPromises);
+                           
+                           tempCanvas.getObjects().forEach(obj => {
+                               if (obj.isPdfImage && obj.filters.length > 0) {
+                                   obj.applyFilters();
+                               }
+                           });
 
-                           // Now that math is rendered, generate the image for the PDF
                            tempCanvas.renderAll(); 
-                           const imgData = tempCanvas.toDataURL({ format: 'jpeg', quality: 0.9 });
+                           const imgData = tempCanvas.toDataURL({ format: 'png' });
                            
                            if (i > 0) { 
                                doc.addPage([originalWidth, originalHeight], originalWidth > originalHeight ? 'landscape' : 'portrait'); 
                            }
-                           doc.addImage(imgData, 'JPEG', 0, 0, originalWidth, originalHeight, undefined, 'FAST');
+                           doc.addImage(imgData, 'PNG', 0, 0, originalWidth, originalHeight, undefined, 'FAST');
                            
                            tempCanvas.dispose(); 
                            resolve();
@@ -1017,7 +1086,7 @@
             // --- LET'S GO ---
             if (isDarkMode) { 
                 document.documentElement.classList.add('dark'); 
-                activeColor = '#FFFFFF';
+                activeColor = '#F9FAFB';
             }
             initCanvas(); 
             initSlides(); 

@@ -109,7 +109,7 @@
                     </button>
                 </div>
                 <div class="flex items-center space-x-2 flex-wrap border-l border-gray-300 dark:border-gray-600 pl-2 ml-2" id="tool-settings">
-                     <div class="flex items-center space-x-2"><label for="pen-size" class="text-sm">Pen:</label><input type="range" id="pen-size" min="1" max="50" value="5" class="w-20" title="Pen Thickness"><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="2" title="Extra Small Pen">XS</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="5" title="Small Pen">S</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="10" title="Medium Pen">M</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="20" title="Large Pen">L</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="35" title="Extra Large Pen">XL</button></div>
+                     <div class="flex items-center space-x-2"><label for="pen-size" class="text-sm">Pen:</label><input type="range" id="pen-size" min="1" max="50" value="5" class="w-20" title="Pen Thickness"><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="2" title="Extra Small Pen">XS</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="3.5" title="Small Pen">S</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="5" title="Medium Pen">M</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="10" title="Large Pen">L</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="20" title="Extra Large Pen">XL</button></div>
                     <div class="flex items-center space-x-1"><input type="checkbox" id="stabilizer-toggle" class="w-4 h-4 rounded" checked><label for="stabilizer-toggle" class="text-sm cursor-pointer" title="Smooth Drawing">Stabilizer</label></div>
                     <div class="flex items-center space-x-2"><label for="eraser-size" class="text-sm">Eraser:</label><input type="range" id="eraser-size" min="1" max="100" value="20" class="w-20" title="Eraser Thickness"></div>
                     <div class="flex items-center space-x-2" id="color-palette"></div>
@@ -935,8 +935,7 @@
                         slide.data.objects.forEach(obj => {
                             if (obj.isPdfImage && invertPdfs) {
                                 obj.isPdfInverted = !obj.isPdfInverted;
-                                // BUGFIX: Use JSON representation for filters when modifying JSON data
-                                obj.filters = obj.isPdfInverted ? [{ type: 'Invert' }] : [];
+                                obj.filters = obj.isPdfInverted ? [new fabric.Image.filters.Invert()] : [];
                             } else if (obj.isEraser) {
                                 const propToChange = obj.type === 'path' ? 'stroke' : 'fill';
                                 obj[propToChange] = newBgColor;
@@ -953,11 +952,7 @@
                                 if (obj.isMath || (obj.type === 'group' && obj.isMath)) {
                                     processColor('fill');
                                     if (obj.objects) {
-                                        obj.objects.forEach(path => {
-                                            // BUGFIX: Modify plain JS object properties, not fabric instances
-                                            path.fill = obj.fill;
-                                            path.stroke = obj.fill;
-                                        });
+                                        obj.objects.forEach(path => path.set({ fill: obj.fill, stroke: obj.fill }));
                                     }
                                 } else if (obj.type === 'i-text') {
                                     processColor('fill');
@@ -981,16 +976,12 @@
                                 }
                             });
                             canvas.setBackgroundColor(newBgColor, canvas.renderAll.bind(canvas));
-                            // BUGFIX: Hide modal after async operation completes
-                            hideModal();
                         });
-                    } else {
-                        // Hide modal if there are no slides
-                        hideModal();
                     }
                     
                     populateColorPalette();
                     setTool(currentTool);
+                    hideModal();
                 };
 
                 if (hasPdf) {

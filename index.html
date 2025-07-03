@@ -25,6 +25,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        @font-face {
+            font-family: 'Virgil';
+            src: url('https://excalidraw.nyc3.cdn.digitaloceanspaces.com/fonts/Virgil.woff2') format('woff2');
+            font-display: swap;
+        }
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; }
         .canvas-container { border-radius: 0.5rem; touch-action: none; }
         .tool-btn, .color-btn, .slide-thumb, .pen-size-btn { transition: all 0.2s ease-in-out; }
@@ -76,7 +81,7 @@
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden">
     <div class="flex h-screen">
         <div class="p-2 bg-white dark:bg-gray-800 shadow-lg flex flex-col space-y-2 w-40 flex-shrink-0">
-            <button id="add-slide-btn" class="p-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 flex items-center justify-center space-x-2" title="Add New Slide">
+            <button id="add-slide-btn" class="p-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 flex items-center justify-center space-x-2" title="Add New Slide (Ctrl+Shift+N)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
                 <span>New Slide</span>
             </button>
@@ -88,7 +93,8 @@
                 <div class="flex items-center space-x-2 flex-wrap">
                     <button id="select-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Select (V)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
                     <button id="draw-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 active" title="Pencil (B)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
-                    <button id="stroke-eraser-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Stroke Eraser (E)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.36 2.64A2.5 2.5 0 0 1 22 4.5V6a2 2 0 0 1-2 2h-4.5a2 2 0 0 1-2-2V4.5a2.5 2.5 0 0 1 2.64-1.86Z"/><path d="m21 14-9-9"/><path d="M12.34 9.66 3 19"/><path d="M3 19c-2 2-2 5 0 7s5 2 7 0"/></svg></button>
+                    <button id="pixel-eraser-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Pixel Eraser (E)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2.5a2 2 0 0 1-1.6-.8L14 4a2 2 0 0 0-1.6-.8H10a2 2 0 0 0-1.6.8l-1.9 2.4a2 2 0 0 1-1.6.8H2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/><path d="M18 14h-4"/></svg></button>
+                    <button id="stroke-eraser-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Stroke Eraser (Shift+E)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.36 2.64A2.5 2.5 0 0 1 22 4.5V6a2 2 0 0 1-2 2h-4.5a2 2 0 0 1-2-2V4.5a2.5 2.5 0 0 1 2.64-1.86Z"/><path d="m21 14-9-9"/><path d="M12.34 9.66 3 19"/><path d="M3 19c-2 2-2 5 0 7s5 2 7 0"/></svg></button>
                     <button id="line-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Line (L)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/></svg></button>
                     <button id="rect-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Rectangle (R)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg></button>
                     <button id="circle-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Circle (C)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg></button>
@@ -109,7 +115,7 @@
                     </button>
                 </div>
                 <div class="flex items-center space-x-2 flex-wrap border-l border-gray-300 dark:border-gray-600 pl-2 ml-2" id="tool-settings">
-                     <div class="flex items-center space-x-2"><label for="pen-size" class="text-sm">Pen:</label><input type="range" id="pen-size" min="1" max="50" value="5" class="w-20" title="Pen Thickness"><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="2" title="Extra Small Pen">XS</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="3.5" title="Small Pen">S</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="5" title="Medium Pen">M</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="10" title="Large Pen">L</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="20" title="Extra Large Pen">XL</button></div>
+                     <div class="flex items-center space-x-2"><label for="pen-size" class="text-sm">Pen:</label><input type="range" id="pen-size" min="1" max="50" value="3.5" step="0.5" class="w-20" title="Pen Thickness"><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="2" title="Extra Small Pen">XS</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="3.5" title="Small Pen">S</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="5" title="Medium Pen">M</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="10" title="Large Pen">L</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="20" title="Extra Large Pen">XL</button></div>
                     <div class="flex items-center space-x-1"><input type="checkbox" id="stabilizer-toggle" class="w-4 h-4 rounded" checked><label for="stabilizer-toggle" class="text-sm cursor-pointer" title="Smooth Drawing">Stabilizer</label></div>
                     <div class="flex items-center space-x-2"><label for="eraser-size" class="text-sm">Eraser:</label><input type="range" id="eraser-size" min="1" max="100" value="20" class="w-20" title="Eraser Thickness"></div>
                     <div class="flex items-center space-x-2" id="color-palette"></div>
@@ -123,7 +129,7 @@
             </div>
 
             <div class="flex-grow p-4 min-h-0 flex items-center justify-center">
-                <div id="canvas-aspect-container" class="shadow-lg rounded-lg bg-white dark:bg-gray-800">
+                <div id="canvas-aspect-container" class="shadow-lg rounded-lg bg-white dark:bg-gray-900">
                     <canvas id="whiteboard-canvas"></canvas>
                 </div>
             </div>
@@ -153,6 +159,8 @@
             let slides = [];
             let currentSlideIndex = -1;
             let isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const darkModeBackgroundColor = '#111827';
+            const lightModeBackgroundColor = '#ffffff';
             
             let isDrawingShape = false;
             let shape, startPoint;
@@ -182,7 +190,7 @@
 
                 canvas = new fabric.Canvas(canvasEl, {
                     isDrawingMode: false,
-                    backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+                    backgroundColor: isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor,
                     perPixelTargetFind: false, 
                 });
                 
@@ -191,11 +199,19 @@
                 resizeCanvas();
             }
             
-            /**
-             * [MODIFIED] Sets up event listeners, including the new 'beforeunload' handler.
-             */
             function setupEventListeners() {
                 canvas.on('object:modified', () => saveState());
+                 canvas.on('path:created', (opt) => {
+                    if (currentTool === 'pixel-eraser') {
+                        // FIX: Mark the path as an unselectable eraser stroke
+                        opt.path.set({ 
+                            isEraser: true,
+                            selectable: false,
+                            evented: false
+                        });
+                        saveState();
+                    }
+                });
                 
                 const canvasContainer = canvas.getElement().parentElement;
                 canvasContainer.addEventListener('pointerdown', handlePointerDown, { passive: false });
@@ -205,21 +221,13 @@
                 
                 window.addEventListener('paste', handlePaste);
                 window.addEventListener('resize', resizeCanvas);
-                // NEW: Add listener for closing the tab
                 window.addEventListener('beforeunload', handleBeforeUnload);
             }
 
-            /**
-             * [NEW] Handles the 'beforeunload' event to prevent accidental closing.
-             */
             function handleBeforeUnload(e) {
-                // Check if there is more than one slide, or if the single slide is not empty.
                 const hasContent = slides.length > 1 || (slides.length === 1 && canvas.getObjects().length > 0);
-
                 if (hasContent) {
-                    // Standard way to trigger the browser's confirmation dialog.
                     e.preventDefault();
-                    // Required for Chrome and other modern browsers.
                     e.returnValue = '';
                 }
             }
@@ -249,14 +257,18 @@
                 const isSelectTool = tool === 'select';
                 const shapeTools = ['rect', 'circle', 'triangle', 'line'];
 
-                canvas.isDrawingMode = false;
+                canvas.isDrawingMode = (tool === 'pixel-eraser');
                 canvas.selection = isSelectTool;
 
                 canvas.forEachObject(obj => {
                     if (obj.isPdfImage) {
                         obj.selectable = false;
                         obj.evented = false;
-                    } else {
+                    } else if (obj.isEraser) { // Also ensure existing eraser strokes are not selectable
+                        obj.selectable = false;
+                        obj.evented = false;
+                    }
+                    else {
                         obj.selectable = isSelectTool;
                         obj.evented = isSelectTool;
                     }
@@ -264,6 +276,13 @@
 
                 if (tool === 'draw' || shapeTools.includes(tool)) {
                     brushColor = activeColor;
+                }
+
+                if (tool === 'pixel-eraser') {
+                    const brush = canvas.freeDrawingBrush;
+                    brush.globalCompositeOperation = 'source-over';
+                    brush.color = isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor;
+                    brush.width = parseInt(eraserSize, 10);
                 }
 
                 const cursorColor = isDarkMode ? 'white' : 'black';
@@ -275,6 +294,10 @@
                     const eraserPath = `<path d='M19.36 2.64A2.5 2.5 0 0 1 22 4.5V6a2 2 0 0 1-2 2h-4.5a2 2 0 0 1-2-2V4.5a2.5 2.5 0 0 1 2.64-1.86Z'/><path d='m21 14-9-9'/><path d='M12.34 9.66 3 19'/><path d='M3 19c-2 2-2 5 0 7s5 2 7 0'/>`;
                     canvas.defaultCursor = `${createCursor(eraserPath, cursorColor)} 4 4, auto`;
                     canvas.hoverCursor = `${createCursor(eraserPath, cursorColor)} 4 4, auto`;
+                } else if (tool === 'pixel-eraser') {
+                     const pixelEraserPath = `<path d='M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2.5a2 2 0 0 1-1.6-.8L14 4a2 2 0 0 0-1.6-.8H10a2 2 0 0 0-1.6.8l-1.9 2.4a2 2 0 0 1-1.6.8H2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z'/><path d='M18 14h-4'/>`;
+                     canvas.defaultCursor = `${createCursor(pixelEraserPath, cursorColor)} 4 4, auto`;
+                     canvas.hoverCursor = `${createCursor(pixelEraserPath, cursorColor)} 4 4, auto`;
                 } else if (shapeTools.includes(tool)) {
                     canvas.defaultCursor = 'crosshair';
                     canvas.hoverCursor = 'crosshair';
@@ -297,7 +320,7 @@
             function loadState(state, callback) {
                 if (!state) {
                     canvas.clear();
-                    canvas.setBackgroundColor(isDarkMode ? '#1f2937' : '#ffffff', canvas.renderAll.bind(canvas));
+                    canvas.setBackgroundColor(isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor, canvas.renderAll.bind(canvas));
                     if (callback) callback();
                     return;
                 }
@@ -308,7 +331,7 @@
                         if (obj.isMath && obj.sourceData) {
                              rerenderMath(obj);
                         }
-                        if (obj.isPdfImage) {
+                        if (obj.isPdfImage || obj.isEraser) {
                             obj.selectable = false;
                             obj.evented = false;
                         } else {
@@ -375,7 +398,7 @@
             // --- SLIDE MANAGEMENT ---
             function initSlides() { addSlide(); }
             function addSlide(data = null, atIndex = -1) {
-                const newSlideData = { history: [], historyIndex: -1, data: data || { objects: [], background: isDarkMode ? '#1f2937' : '#ffffff' } };
+                const newSlideData = { history: [], historyIndex: -1, data: data || { objects: [], background: isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor } };
                 if (data) { 
                     newSlideData.history.push(data); 
                     newSlideData.historyIndex = 0; 
@@ -560,7 +583,7 @@
                 showModal("✨ Brainstorm Results", ideasBody, createDialogButtons({ text: 'Close', action: hideModal, class: 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500' },{ text: 'Insert on Canvas', action: () => insertBrainstormIdeas(ideas), class: 'bg-blue-500 text-white hover:bg-blue-600' }));
             }
             function insertBrainstormIdeas(ideas) {
-                 const text = new fabric.IText(ideas.replace(/•/g, '\n•'), { left: canvas.getCenter().left, top: canvas.getCenter().top, originX: 'center', originY: 'center', fill: activeColor, fontSize: 24, fontFamily: 'Inter', padding: 10, shadow: 'rgba(0,0,0,0.3) 2px 2px 4px' });
+                 const text = new fabric.IText(ideas.replace(/•/g, '\n•'), { left: canvas.getCenter().left, top: canvas.getCenter().top, originX: 'center', originY: 'center', fill: activeColor, fontSize: 24, fontFamily: 'Virgil', padding: 10, shadow: 'rgba(0,0,0,0.3) 2px 2px 4px' });
                  canvas.add(text).setActiveObject(text).renderAll(); text.enterEditing(); saveState(); hideModal();
             }
 
@@ -602,7 +625,7 @@
                                 isPdfImage: true,
                                 isPdfInverted: false
                             }],
-                            background: isDarkMode ? '#1f2937' : '#ffffff'
+                            background: isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor
                         };
                         newSlidesData.push(slideJson);
                     }
@@ -644,6 +667,7 @@
             // --- UI BINDINGS ---
             document.getElementById('select-tool').onclick = () => setTool('select');
             document.getElementById('draw-tool').onclick = () => setTool('draw');
+            document.getElementById('pixel-eraser-tool').onclick = () => setTool('pixel-eraser');
             document.getElementById('stroke-eraser-tool').onclick = () => setTool('stroke-eraser');
             document.getElementById('line-tool').onclick = () => setTool('line');
             document.getElementById('rect-tool').onclick = () => setTool('rect');
@@ -663,19 +687,62 @@
             document.getElementById('modal').onclick = (e) => { if (e.target.id === 'modal') hideModal(); };
             document.getElementById('explain-tool').onclick = handleExplainTool;
             document.getElementById('brainstorm-tool').onclick = showBrainstormModal;
-            document.getElementById('pen-size').oninput = (e) => { penSize = e.target.value; };
-            document.getElementById('eraser-size').oninput = (e) => { eraserSize = e.target.value; };
+            document.getElementById('pen-size').oninput = (e) => { penSize = e.target.value; updateDrawingTool(); };
+            document.getElementById('eraser-size').oninput = (e) => { 
+                eraserSize = e.target.value;
+                if (currentTool === 'pixel-eraser') {
+                    canvas.freeDrawingBrush.width = parseInt(eraserSize, 10);
+                }
+            };
             document.querySelectorAll('.pen-size-btn').forEach(btn => { btn.onclick = (e) => { penSize = e.currentTarget.dataset.size; document.getElementById('pen-size').value = penSize; updateDrawingTool(); }; });
             document.getElementById('stabilizer-toggle').onchange = (e) => { useStabilizer = e.target.checked; };
             window.addEventListener('keydown', (e) => {
                 if (document.getElementById('modal').classList.contains('visible')) { if (e.key === 'Escape') hideModal(); if (e.key === 'Enter') { if (document.getElementById('latex-input')) { e.preventDefault(); insertMath(); } if (document.getElementById('brainstorm-input')) { e.preventDefault(); handleBrainstorm(); } } return; }
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || canvas.getActiveObject()?.isEditing) return;
-                if (e.ctrlKey || e.metaKey) { if (e.key === 'z') { e.preventDefault(); undo(); } else if (e.key === 'y') { e.preventDefault(); redo(); } } 
-                else { switch (e.key.toLowerCase()) { case 'b': setTool('draw'); break; case 'e': setTool('stroke-eraser'); break; case 'v': setTool('select'); break; case 'l': setTool('line'); break; case 'r': setTool('rect'); break; case 'c': setTool('circle'); break; case 't': addText(); break; case 'm': showMathModal(); break; case 'i': document.getElementById('image-input').click(); break; case 'delete': case 'backspace': deleteSelected(); break; } }
+                
+                if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'n') {
+                    e.preventDefault();
+                    addSlide(null, currentSlideIndex + 1);
+                    return;
+                }
+
+                if (e.ctrlKey || e.metaKey) { 
+                    if (e.key === 'z') { e.preventDefault(); undo(); } 
+                    else if (e.key === 'y') { e.preventDefault(); redo(); } 
+                } else if (e.shiftKey) {
+                     if (e.key.toLowerCase() === 'e') { setTool('stroke-eraser'); }
+                } else { 
+                    switch (e.key.toLowerCase()) { 
+                        case 'b': setTool('draw'); break; 
+                        case 'e': setTool('pixel-eraser'); break; 
+                        case 'v': setTool('select'); break; 
+                        case 'l': setTool('line'); break; 
+                        case 'r': setTool('rect'); break; 
+                        case 'c': setTool('circle'); break; 
+                        case 't': addText(); break; 
+                        case 'm': showMathModal(); break; 
+                        case 'i': document.getElementById('image-input').click(); break; 
+                        case 'delete': case 'backspace': deleteSelected(); break;
+                        case 'arrowup': 
+                            if (currentSlideIndex > 0) {
+                                switchSlide(currentSlideIndex - 1, currentSlideIndex);
+                            }
+                            break;
+                        case 'arrowdown':
+                            if (currentSlideIndex < slides.length - 1) {
+                                switchSlide(currentSlideIndex + 1, currentSlideIndex);
+                            }
+                            break;
+                    } 
+                }
             });
             function updateDrawingTool() {
                 if (!canvas) return;
-                document.querySelectorAll('.pen-size-btn').forEach(btn => { btn.classList.toggle('active', parseFloat(btn.dataset.size) === parseFloat(penSize)); });
+                if(currentTool === 'draw') {
+                    document.querySelectorAll('.pen-size-btn').forEach(btn => { btn.classList.toggle('active', parseFloat(btn.dataset.size) === parseFloat(penSize)); });
+                } else {
+                    document.querySelectorAll('.pen-size-btn').forEach(btn => btn.classList.remove('active'));
+                }
             }
             
             // --- UNIFIED DRAWING & SHAPE LOGIC ---
@@ -702,7 +769,7 @@
                     startPoint = pointer;
                     const commonOptions = { 
                         left: startPoint.x, top: startPoint.y, originX: 'left', originY: 'top', 
-                        stroke: brushColor, strokeWidth: parseInt(penSize, 10), fill: 'transparent', 
+                        stroke: brushColor, strokeWidth: parseFloat(penSize), fill: 'transparent', 
                         selectable: false, evented: false, isShape: true 
                     };
                     switch(currentTool) {
@@ -716,21 +783,41 @@
             }
 
             function handlePointerMove(e) {
+                if (currentTool === 'pixel-eraser') return;
                 if (!isDrawingPath && !isDrawingShape) { return; }
                 if (e.pointerType === 'mouse' && e.buttons !== 1) return;
                 e.preventDefault();
                 const pointer = getPoint(e);
 
+                // FIX: Improve stroke eraser to use an intersection-based hitbox
                 if (currentTool === 'stroke-eraser' && isDrawingPath) {
-                    const erasableTypes = ['path', 'line', 'rect', 'ellipse', 'triangle', 'circle'];
+                    const erasableTypes = ['path', 'line', 'rect', 'ellipse', 'triangle', 'circle', 'group', 'i-text'];
                     const objects = canvas.getObjects();
+                    const eraserRadius = 10; // The "brush" size for the stroke eraser
+                    
+                    const hitArea = new fabric.Rect({
+                        left: pointer.x - eraserRadius,
+                        top: pointer.y - eraserRadius,
+                        width: eraserRadius * 2,
+                        height: eraserRadius * 2,
+                        visible: false,
+                        selectable: false,
+                        evented: false,
+                    });
+
+                    let somethingErased = false;
                     for (let i = objects.length - 1; i >= 0; i--) {
                         const obj = objects[i];
-                        if (obj && erasableTypes.includes(obj.type) && obj.containsPoint(pointer)) {
+                        if (obj && erasableTypes.includes(obj.type) && !obj.isPdfImage && obj.intersectsWithObject(hitArea)) {
                            canvas.remove(obj);
+                           somethingErased = true;
                         }
                     }
-                    canvas.requestRenderAll();
+                    
+                    if (somethingErased) {
+                        canvas.requestRenderAll();
+                        saveState(); // Save state immediately after erasing objects
+                    }
                     return;
                 }
 
@@ -785,10 +872,17 @@
             }
 
             function handlePointerUp(e) {
+                // Pixel eraser is handled by 'path:created'
+                // Stroke eraser is handled on pointer move
+                if (currentTool === 'pixel-eraser' || currentTool === 'stroke-eraser') {
+                    isDrawingPath = false; // Just reset the flag
+                    return;
+                }
+
                 if (!isDrawingPath && !isDrawingShape) { return; }
                 e.preventDefault();
 
-                if (isDrawingPath) {
+                if (isDrawingPath) { // This block is now only for the 'draw' tool
                     canvas.clearContext(canvas.contextTop);
                     if (currentTool === 'draw') {
                         if (drawingPoints.length < 2) {
@@ -851,7 +945,7 @@
                 const text = new fabric.IText('Double-click to edit', { 
                     left: canvas.getCenter().left, top: canvas.getCenter().top, 
                     originX: 'center', originY: 'center', fill: activeColor, 
-                    fontSize: 40, fontFamily: 'Inter', padding: 5 
+                    fontSize: 40, fontFamily: 'Virgil', padding: 5 
                 });
                 canvas.add(text).setActiveObject(text).renderAll(); text.enterEditing(); saveState();
             }
@@ -928,14 +1022,14 @@
 
                     showModal('Updating Theme', '<p>Applying new theme to all slides...</p>', null);
                     
-                    const newBgColor = isDarkMode ? '#1f2937' : '#ffffff';
+                    const newBgColor = isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor;
 
                     for (const slide of slides) {
                         if (!slide.data.objects) continue;
                         slide.data.objects.forEach(obj => {
                             if (obj.isPdfImage && invertPdfs) {
                                 obj.isPdfInverted = !obj.isPdfInverted;
-                                obj.filters = obj.isPdfInverted ? [new fabric.Image.filters.Invert()] : [];
+                                obj.filters = obj.isPdfInverted ? [{ type: 'Invert' }] : [];
                             } else if (obj.isEraser) {
                                 const propToChange = obj.type === 'path' ? 'stroke' : 'fill';
                                 obj[propToChange] = newBgColor;
@@ -952,7 +1046,10 @@
                                 if (obj.isMath || (obj.type === 'group' && obj.isMath)) {
                                     processColor('fill');
                                     if (obj.objects) {
-                                        obj.objects.forEach(path => path.set({ fill: obj.fill, stroke: obj.fill }));
+                                        obj.objects.forEach(path => {
+                                            path.fill = obj.fill;
+                                            path.stroke = obj.fill;
+                                        });
                                     }
                                 } else if (obj.type === 'i-text') {
                                     processColor('fill');
@@ -976,12 +1073,14 @@
                                 }
                             });
                             canvas.setBackgroundColor(newBgColor, canvas.renderAll.bind(canvas));
+                            hideModal();
                         });
+                    } else {
+                        hideModal();
                     }
                     
                     populateColorPalette();
                     setTool(currentTool);
-                    hideModal();
                 };
 
                 if (hasPdf) {
@@ -989,7 +1088,7 @@
                         "Invert PDF Colors?",
                         "<p>Invert the colors of imported PDFs for better contrast in the new theme?</p>",
                         createDialogButtons(
-                            { text: 'No', action: () => { hideModal(); performToggle(false); }, class: 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500' },
+                            { text: 'No', action: () => { hideModal(); performToggle(false); }, class: 'bg-ray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500' },
                             { text: 'Yes, Invert', action: () => { hideModal(); performToggle(true); }, class: 'bg-blue-500 text-white hover:bg-blue-600' }
                         )
                     );

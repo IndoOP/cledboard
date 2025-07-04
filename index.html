@@ -177,7 +177,6 @@
 
             const lightColors = ['#111827', '#DC2626', '#DB2777', '#9333EA', '#2563EB', '#059669', '#F59E0B'];
             const darkColors =  ['#F9FAFB', '#F87171', '#F472B6', '#C084FC', '#60A5FA', '#34D399', '#FBBF24'];
-            // FIX: Replaced isPdfInverted with a more generic isInverted property
             const customProps = ['isMath', 'isShape', 'sourceData', 'isEraser', 'isPdfImage', 'isInverted'];
 
             // --- INITIALIZATION ---
@@ -261,9 +260,9 @@
                 canvas.isDrawingMode = (tool === 'pixel-eraser');
                 canvas.selection = isSelectTool;
 
+                // FIX: Differentiate between PDF images (static) and regular images (interactive)
                 canvas.forEachObject(obj => {
-                    const isMedia = obj.isPdfImage || (obj.type === 'image' && !obj.isEraser);
-                    if (isMedia) {
+                    if (obj.isPdfImage) {
                         obj.selectable = false;
                         obj.evented = false;
                     } else if (obj.isEraser) {
@@ -305,7 +304,6 @@
                 
                 canvas.defaultCursor = cursorValue;
                 canvas.hoverCursor = cursorValue;
-                // FIX: Apply cursor to upper canvas to prevent it from disappearing with graphics tablets
                 upperCanvas.style.cursor = cursorValue;
 
                 if (!isSelectTool) {
@@ -329,12 +327,15 @@
                 
                 canvas.loadFromJSON(state, () => {
                     const isSelectTool = currentTool === 'select';
+                    // FIX: Differentiate between PDF images (static) and regular images (interactive) on load
                     canvas.forEachObject(obj => {
                         if (obj.isMath && obj.sourceData) {
                              rerenderMath(obj);
                         }
-                        const isMedia = obj.isPdfImage || (obj.type === 'image' && !obj.isEraser);
-                        if (isMedia || obj.isEraser) {
+                        if (obj.isPdfImage) {
+                            obj.selectable = false;
+                            obj.evented = false;
+                        } else if (obj.isEraser) {
                             obj.selectable = false;
                             obj.evented = false;
                         } else {
@@ -681,7 +682,6 @@
             document.getElementById('image-input').onchange = (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => addImage(event.target.result); reader.readAsDataURL(file); } e.target.value = null; };
             document.getElementById('undo-btn').onclick = undo;
             document.getElementById('redo-btn').onclick = redo;
-            // FIX: Ask for filename before exporting
             document.getElementById('export-pdf-btn').onclick = askForPdfFilename;
             document.getElementById('dark-mode-toggle').onclick = toggleDarkMode;
             document.getElementById('add-slide-btn').onclick = () => addSlide(null, currentSlideIndex + 1);
@@ -802,7 +802,7 @@
                 const pointer = getPoint(e);
 
                 if (currentTool === 'stroke-eraser' && isDrawingPath) {
-                    const erasableTypes = ['path', 'line', 'rect', 'ellipse', 'triangle', 'circle', 'group', 'i-text'];
+                    const erasableTypes = ['path', 'line', 'rect', 'ellipse', 'triangle', 'circle', 'group', 'i-text', 'image'];
                     const objects = canvas.getObjects();
                     const eraserRadius = 10;
                     
@@ -819,8 +819,8 @@
                     let somethingErased = false;
                     for (let i = objects.length - 1; i >= 0; i--) {
                         const obj = objects[i];
-                        const isMedia = obj.isPdfImage || (obj.type === 'image' && !obj.isEraser);
-                        if (obj && erasableTypes.includes(obj.type) && !isMedia && obj.intersectsWithObject(hitArea)) {
+                        // FIX: Allow erasing regular images but not PDF background images
+                        if (obj && erasableTypes.includes(obj.type) && !obj.isPdfImage && obj.intersectsWithObject(hitArea)) {
                            canvas.remove(obj);
                            somethingErased = true;
                         }
@@ -967,7 +967,6 @@
                         left: canvas.getCenter().left, top: canvas.getCenter().top, 
                         originX: 'center', originY: 'center', 
                         cornerColor: '#3B82F6', cornerSize: 10, transparentCorners: false,
-                        // Add properties to make it work with dark mode toggle
                         isInverted: false
                     });
                     
@@ -1014,7 +1013,6 @@
 
             async function toggleDarkMode() {
                 saveCurrentSlideState();
-                // FIX: Check for PDFs and regular images
                 const hasInvertibleMedia = slides.some(s => s.data.objects.some(o => o.isPdfImage || (o.type === 'image' && !o.isPdfImage && !o.isEraser)));
                 
                 const performToggle = (invertMedia) => {
@@ -1082,7 +1080,6 @@
                     if (currentSlide) {
                         loadState(currentSlide.data, () => {
                             canvas.getObjects().forEach(obj => {
-                                // FIX: Apply filters to both PDFs and regular images
                                 if (obj.isInverted) {
                                     obj.applyFilters();
                                 }
@@ -1098,7 +1095,6 @@
                     setTool(currentTool);
                 };
 
-                // FIX: Update modal prompt to be more generic
                 if (hasInvertibleMedia) {
                     showModal(
                         "Invert Media Colors?",
@@ -1139,7 +1135,6 @@
                 });
             }
             
-            // FIX: Add function to ask for filename
             function askForPdfFilename() {
                 const body = `<p class="text-sm mb-2 text-gray-600 dark:text-gray-400">Enter a filename for your PDF export.</p><input id="pdf-filename-input" class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-gray-200" value="whiteboard_export.pdf">`;
                 showModal("Export as PDF", body, createDialogButtons(
@@ -1159,7 +1154,6 @@
                 filenameInput.select();
             }
 
-            // FIX: Modify function to accept filename
             async function exportToPDF(filename) {
                 const { jsPDF } = window.jspdf; 
                 saveCurrentSlideState();
@@ -1188,7 +1182,6 @@
                            await Promise.all(renderingPromises);
                            
                            tempCanvas.getObjects().forEach(obj => {
-                               // FIX: Apply filters to all inverted media
                                if (obj.isInverted && obj.filters.length > 0) {
                                    obj.applyFilters();
                                }

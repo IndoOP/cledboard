@@ -177,7 +177,8 @@
 
             const lightColors = ['#111827', '#DC2626', '#DB2777', '#9333EA', '#2563EB', '#059669', '#F59E0B'];
             const darkColors =  ['#F9FAFB', '#F87171', '#F472B6', '#C084FC', '#60A5FA', '#34D399', '#FBBF24'];
-            const customProps = ['isMath', 'isShape', 'sourceData', 'isEraser', 'isPdfImage', 'isPdfInverted'];
+            // FIX: Replaced isPdfInverted with a more generic isInverted property
+            const customProps = ['isMath', 'isShape', 'sourceData', 'isEraser', 'isPdfImage', 'isInverted'];
 
             // --- INITIALIZATION ---
             function initCanvas() {
@@ -203,7 +204,6 @@
                 canvas.on('object:modified', () => saveState());
                  canvas.on('path:created', (opt) => {
                     if (currentTool === 'pixel-eraser') {
-                        // FIX: Mark the path as an unselectable eraser stroke
                         opt.path.set({ 
                             isEraser: true,
                             selectable: false,
@@ -256,15 +256,17 @@
                 currentTool = tool;
                 const isSelectTool = tool === 'select';
                 const shapeTools = ['rect', 'circle', 'triangle', 'line'];
+                const upperCanvas = canvas.upperCanvasEl;
 
                 canvas.isDrawingMode = (tool === 'pixel-eraser');
                 canvas.selection = isSelectTool;
 
                 canvas.forEachObject(obj => {
-                    if (obj.isPdfImage) {
+                    const isMedia = obj.isPdfImage || (obj.type === 'image' && !obj.isEraser);
+                    if (isMedia) {
                         obj.selectable = false;
                         obj.evented = false;
-                    } else if (obj.isEraser) { // Also ensure existing eraser strokes are not selectable
+                    } else if (obj.isEraser) {
                         obj.selectable = false;
                         obj.evented = false;
                     }
@@ -286,26 +288,26 @@
                 }
 
                 const cursorColor = isDarkMode ? 'white' : 'black';
+                let cursorValue = 'default';
+
                 if (tool === 'draw') {
                     const pencilPath = `<path d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/>`;
-                    canvas.defaultCursor = `${createCursor(pencilPath, cursorColor)} 4 20, auto`;
-                    canvas.hoverCursor = `${createCursor(pencilPath, cursorColor)} 4 20, auto`;
+                    cursorValue = `${createCursor(pencilPath, cursorColor)} 4 20, auto`;
                 } else if (tool === 'stroke-eraser') {
                     const eraserPath = `<path d='M19.36 2.64A2.5 2.5 0 0 1 22 4.5V6a2 2 0 0 1-2 2h-4.5a2 2 0 0 1-2-2V4.5a2.5 2.5 0 0 1 2.64-1.86Z'/><path d='m21 14-9-9'/><path d='M12.34 9.66 3 19'/><path d='M3 19c-2 2-2 5 0 7s5 2 7 0'/>`;
-                    canvas.defaultCursor = `${createCursor(eraserPath, cursorColor)} 4 4, auto`;
-                    canvas.hoverCursor = `${createCursor(eraserPath, cursorColor)} 4 4, auto`;
+                    cursorValue = `${createCursor(eraserPath, cursorColor)} 4 4, auto`;
                 } else if (tool === 'pixel-eraser') {
                      const pixelEraserPath = `<path d='M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2.5a2 2 0 0 1-1.6-.8L14 4a2 2 0 0 0-1.6-.8H10a2 2 0 0 0-1.6.8l-1.9 2.4a2 2 0 0 1-1.6.8H2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z'/><path d='M18 14h-4'/>`;
-                     canvas.defaultCursor = `${createCursor(pixelEraserPath, cursorColor)} 4 4, auto`;
-                     canvas.hoverCursor = `${createCursor(pixelEraserPath, cursorColor)} 4 4, auto`;
+                     cursorValue = `${createCursor(pixelEraserPath, cursorColor)} 4 4, auto`;
                 } else if (shapeTools.includes(tool)) {
-                    canvas.defaultCursor = 'crosshair';
-                    canvas.hoverCursor = 'crosshair';
-                } else { 
-                    canvas.defaultCursor = 'default';
-                    canvas.hoverCursor = 'default';
+                    cursorValue = 'crosshair';
                 }
                 
+                canvas.defaultCursor = cursorValue;
+                canvas.hoverCursor = cursorValue;
+                // FIX: Apply cursor to upper canvas to prevent it from disappearing with graphics tablets
+                upperCanvas.style.cursor = cursorValue;
+
                 if (!isSelectTool) {
                     canvas.discardActiveObject().renderAll();
                 }
@@ -331,7 +333,8 @@
                         if (obj.isMath && obj.sourceData) {
                              rerenderMath(obj);
                         }
-                        if (obj.isPdfImage || obj.isEraser) {
+                        const isMedia = obj.isPdfImage || (obj.type === 'image' && !obj.isEraser);
+                        if (isMedia || obj.isEraser) {
                             obj.selectable = false;
                             obj.evented = false;
                         } else {
@@ -623,7 +626,7 @@
                                 selectable: false,
                                 evented: false,
                                 isPdfImage: true,
-                                isPdfInverted: false
+                                isInverted: false
                             }],
                             background: isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor
                         };
@@ -678,7 +681,8 @@
             document.getElementById('image-input').onchange = (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => addImage(event.target.result); reader.readAsDataURL(file); } e.target.value = null; };
             document.getElementById('undo-btn').onclick = undo;
             document.getElementById('redo-btn').onclick = redo;
-            document.getElementById('export-pdf-btn').onclick = exportToPDF;
+            // FIX: Ask for filename before exporting
+            document.getElementById('export-pdf-btn').onclick = askForPdfFilename;
             document.getElementById('dark-mode-toggle').onclick = toggleDarkMode;
             document.getElementById('add-slide-btn').onclick = () => addSlide(null, currentSlideIndex + 1);
             document.getElementById('math-tool').onclick = showMathModal;
@@ -697,7 +701,15 @@
             document.querySelectorAll('.pen-size-btn').forEach(btn => { btn.onclick = (e) => { penSize = e.currentTarget.dataset.size; document.getElementById('pen-size').value = penSize; updateDrawingTool(); }; });
             document.getElementById('stabilizer-toggle').onchange = (e) => { useStabilizer = e.target.checked; };
             window.addEventListener('keydown', (e) => {
-                if (document.getElementById('modal').classList.contains('visible')) { if (e.key === 'Escape') hideModal(); if (e.key === 'Enter') { if (document.getElementById('latex-input')) { e.preventDefault(); insertMath(); } if (document.getElementById('brainstorm-input')) { e.preventDefault(); handleBrainstorm(); } } return; }
+                if (document.getElementById('modal').classList.contains('visible')) { 
+                    if (e.key === 'Escape') hideModal(); 
+                    if (e.key === 'Enter') { 
+                        if (document.getElementById('latex-input')) { e.preventDefault(); insertMath(); } 
+                        if (document.getElementById('brainstorm-input')) { e.preventDefault(); handleBrainstorm(); }
+                        if (document.getElementById('pdf-filename-input')) { e.preventDefault(); document.querySelector('.bg-blue-500').click(); }
+                    } 
+                    return; 
+                }
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || canvas.getActiveObject()?.isEditing) return;
                 
                 if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'n') {
@@ -789,11 +801,10 @@
                 e.preventDefault();
                 const pointer = getPoint(e);
 
-                // FIX: Improve stroke eraser to use an intersection-based hitbox
                 if (currentTool === 'stroke-eraser' && isDrawingPath) {
                     const erasableTypes = ['path', 'line', 'rect', 'ellipse', 'triangle', 'circle', 'group', 'i-text'];
                     const objects = canvas.getObjects();
-                    const eraserRadius = 10; // The "brush" size for the stroke eraser
+                    const eraserRadius = 10;
                     
                     const hitArea = new fabric.Rect({
                         left: pointer.x - eraserRadius,
@@ -808,7 +819,8 @@
                     let somethingErased = false;
                     for (let i = objects.length - 1; i >= 0; i--) {
                         const obj = objects[i];
-                        if (obj && erasableTypes.includes(obj.type) && !obj.isPdfImage && obj.intersectsWithObject(hitArea)) {
+                        const isMedia = obj.isPdfImage || (obj.type === 'image' && !obj.isEraser);
+                        if (obj && erasableTypes.includes(obj.type) && !isMedia && obj.intersectsWithObject(hitArea)) {
                            canvas.remove(obj);
                            somethingErased = true;
                         }
@@ -816,7 +828,7 @@
                     
                     if (somethingErased) {
                         canvas.requestRenderAll();
-                        saveState(); // Save state immediately after erasing objects
+                        saveState();
                     }
                     return;
                 }
@@ -872,17 +884,15 @@
             }
 
             function handlePointerUp(e) {
-                // Pixel eraser is handled by 'path:created'
-                // Stroke eraser is handled on pointer move
                 if (currentTool === 'pixel-eraser' || currentTool === 'stroke-eraser') {
-                    isDrawingPath = false; // Just reset the flag
+                    isDrawingPath = false;
                     return;
                 }
 
                 if (!isDrawingPath && !isDrawingShape) { return; }
                 e.preventDefault();
 
-                if (isDrawingPath) { // This block is now only for the 'draw' tool
+                if (isDrawingPath) {
                     canvas.clearContext(canvas.contextTop);
                     if (currentTool === 'draw') {
                         if (drawingPoints.length < 2) {
@@ -956,7 +966,9 @@
                     img.set({ 
                         left: canvas.getCenter().left, top: canvas.getCenter().top, 
                         originX: 'center', originY: 'center', 
-                        cornerColor: '#3B82F6', cornerSize: 10, transparentCorners: false 
+                        cornerColor: '#3B82F6', cornerSize: 10, transparentCorners: false,
+                        // Add properties to make it work with dark mode toggle
+                        isInverted: false
                     });
                     
                     canvas.add(img);
@@ -1002,9 +1014,10 @@
 
             async function toggleDarkMode() {
                 saveCurrentSlideState();
-                const hasPdf = slides.some(s => s.data.objects.some(o => o.isPdfImage));
+                // FIX: Check for PDFs and regular images
+                const hasInvertibleMedia = slides.some(s => s.data.objects.some(o => o.isPdfImage || (o.type === 'image' && !o.isPdfImage && !o.isEraser)));
                 
-                const performToggle = (invertPdfs) => {
+                const performToggle = (invertMedia) => {
                     isDarkMode = !isDarkMode;
                     document.documentElement.classList.toggle('dark', isDarkMode);
                     
@@ -1027,9 +1040,10 @@
                     for (const slide of slides) {
                         if (!slide.data.objects) continue;
                         slide.data.objects.forEach(obj => {
-                            if (obj.isPdfImage && invertPdfs) {
-                                obj.isPdfInverted = !obj.isPdfInverted;
-                                obj.filters = obj.isPdfInverted ? [{ type: 'Invert' }] : [];
+                            const isRegularImage = obj.type === 'image' && !obj.isPdfImage;
+                            if ((obj.isPdfImage || isRegularImage) && invertMedia) {
+                                obj.isInverted = !obj.isInverted;
+                                obj.filters = obj.isInverted ? [{ type: 'Invert' }] : [];
                             } else if (obj.isEraser) {
                                 const propToChange = obj.type === 'path' ? 'stroke' : 'fill';
                                 obj[propToChange] = newBgColor;
@@ -1068,7 +1082,8 @@
                     if (currentSlide) {
                         loadState(currentSlide.data, () => {
                             canvas.getObjects().forEach(obj => {
-                                if (obj.isPdfImage) {
+                                // FIX: Apply filters to both PDFs and regular images
+                                if (obj.isInverted) {
                                     obj.applyFilters();
                                 }
                             });
@@ -1083,10 +1098,11 @@
                     setTool(currentTool);
                 };
 
-                if (hasPdf) {
+                // FIX: Update modal prompt to be more generic
+                if (hasInvertibleMedia) {
                     showModal(
-                        "Invert PDF Colors?",
-                        "<p>Invert the colors of imported PDFs for better contrast in the new theme?</p>",
+                        "Invert Media Colors?",
+                        "<p>Invert the colors of imported PDFs and images for better contrast in the new theme?</p>",
                         createDialogButtons(
                             { text: 'No', action: () => { hideModal(); performToggle(false); }, class: 'bg-ray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500' },
                             { text: 'Yes, Invert', action: () => { hideModal(); performToggle(true); }, class: 'bg-blue-500 text-white hover:bg-blue-600' }
@@ -1122,8 +1138,29 @@
                     });
                 });
             }
+            
+            // FIX: Add function to ask for filename
+            function askForPdfFilename() {
+                const body = `<p class="text-sm mb-2 text-gray-600 dark:text-gray-400">Enter a filename for your PDF export.</p><input id="pdf-filename-input" class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-gray-200" value="whiteboard_export.pdf">`;
+                showModal("Export as PDF", body, createDialogButtons(
+                    { text: 'Cancel', action: hideModal, class: 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500' },
+                    { text: 'Export', action: () => {
+                        const input = document.getElementById('pdf-filename-input');
+                        let filename = input.value.trim();
+                        if (filename && !filename.toLowerCase().endsWith('.pdf')) {
+                            filename += '.pdf';
+                        }
+                        hideModal(); 
+                        exportToPDF(filename || 'whiteboard_export.pdf');
+                    }, class: 'bg-blue-500 text-white hover:bg-blue-600' }
+                ));
+                const filenameInput = document.getElementById('pdf-filename-input');
+                filenameInput.focus();
+                filenameInput.select();
+            }
 
-            async function exportToPDF() {
+            // FIX: Modify function to accept filename
+            async function exportToPDF(filename) {
                 const { jsPDF } = window.jspdf; 
                 saveCurrentSlideState();
                 const originalWidth = canvas.width; 
@@ -1151,7 +1188,8 @@
                            await Promise.all(renderingPromises);
                            
                            tempCanvas.getObjects().forEach(obj => {
-                               if (obj.isPdfImage && obj.filters.length > 0) {
+                               // FIX: Apply filters to all inverted media
+                               if (obj.isInverted && obj.filters.length > 0) {
                                    obj.applyFilters();
                                }
                            });
@@ -1169,7 +1207,7 @@
                        });
                     });
                 }
-                doc.save('whiteboard_export.pdf'); 
+                doc.save(filename); 
                 hideModal();
             }
 

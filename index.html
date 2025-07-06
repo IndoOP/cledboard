@@ -89,38 +89,40 @@
         </div>
         
         <div class="flex flex-col flex-grow min-w-0">
-            <div class="p-2 bg-white dark:bg-gray-800 shadow-md flex items-center justify-between space-x-2 flex-wrap flex-shrink-0">
-                <div class="flex items-center space-x-2 flex-wrap">
-                    <button id="select-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Select (V)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
-                    <button id="draw-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 active" title="Pencil (B)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
-                    <button id="pixel-eraser-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Pixel Eraser (E)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2.5a2 2 0 0 1-1.6-.8L14 4a2 2 0 0 0-1.6-.8H10a2 2 0 0 0-1.6.8l-1.9 2.4a2 2 0 0 1-1.6.8H2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/><path d="M18 14h-4"/></svg></button>
-                    <button id="stroke-eraser-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Stroke Eraser (Shift+E)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.36 2.64A2.5 2.5 0 0 1 22 4.5V6a2 2 0 0 1-2 2h-4.5a2 2 0 0 1-2-2V4.5a2.5 2.5 0 0 1 2.64-1.86Z"/><path d="m21 14-9-9"/><path d="M12.34 9.66 3 19"/><path d="M3 19c-2 2-2 5 0 7s5 2 7 0"/></svg></button>
-                    <button id="line-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Line (L)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/></svg></button>
-                    <button id="rect-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Rectangle (R)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg></button>
-                    <button id="circle-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Circle (C)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg></button>
-                    <button id="triangle-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Triangle"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/></svg></button>
-                    <button id="text-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Add Text (T)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/></svg></button>
-                    <button id="math-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Insert Math (M)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.27 21.26a1.18 1.18 0 0 0 1.46 0C19.26 18.2 22 13.92 22 9.49A6.51 6.51 0 0 0 15.51 3a6.26 6.26 0 0 0-4.66 2.1l-.85.85-.85-.85a6.26 6.26 0 0 0-4.66-2.1A6.51 6.51 0 0 0 2 9.49c0 4.43 2.74 8.71 8.27 11.77z"/><path d="M12 7v6"/><path d="M10 9h4"/></svg></button>
-                    <button id="pdf-import-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Import PDF"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><path d="M14 2v6h6"/><path d="M2 15.5v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2z"/></svg></button>
-                    <input type="file" id="pdf-input" class="hidden" accept="application/pdf">
-                    <button id="image-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Add Image (I)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></button>
-                    <input type="file" id="image-input" class="hidden" accept="image/*">
-                </div>
-                <div class="flex items-center space-x-2 flex-wrap border-l border-gray-300 dark:border-gray-600 pl-2 ml-2">
-                    <button id="explain-tool" class="tool-btn p-2 rounded-md hover:bg-purple-200 dark:hover:bg-purple-700 flex items-center space-x-1" title="✨ Explain This">
-                        <span class="text-xl">✨</span> <span>Explain</span>
-                    </button>
-                    <button id="brainstorm-tool" class="tool-btn p-2 rounded-md hover:bg-blue-200 dark:hover:bg-blue-700 flex items-center space-x-1" title="✨ Brainstorm Ideas">
-                       <span class="text-xl">✨</span> <span>Brainstorm</span>
-                    </button>
-                </div>
-                <div class="flex items-center space-x-2 flex-wrap border-l border-gray-300 dark:border-gray-600 pl-2 ml-2" id="tool-settings">
+            <!-- TOOLBAR: Consolidated into a single line -->
+            <div class="p-2 bg-white dark:bg-gray-800 shadow-md flex items-center justify-start space-x-2 flex-wrap flex-shrink-0">
+                <!-- Drawing and Shape Tools -->
+                <button id="select-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Select (V)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
+                <button id="draw-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 active" title="Pencil (B)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+                <button id="pixel-eraser-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Pixel Eraser (E)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2.5a2 2 0 0 1-1.6-.8L14 4a2 2 0 0 0-1.6-.8H10a2 2 0 0 0-1.6.8l-1.9 2.4a2 2 0 0 1-1.6.8H2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/><path d="M18 14h-4"/></svg></button>
+                <button id="stroke-eraser-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Stroke Eraser (Shift+E)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.36 2.64A2.5 2.5 0 0 1 22 4.5V6a2 2 0 0 1-2 2h-4.5a2 2 0 0 1-2-2V4.5a2.5 2.5 0 0 1 2.64-1.86Z"/><path d="m21 14-9-9"/><path d="M12.34 9.66 3 19"/><path d="M3 19c-2 2-2 5 0 7s5 2 7 0"/></svg></button>
+                <button id="line-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Line (L)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/></svg></button>
+                <button id="rect-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Rectangle (R)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg></button>
+                <button id="circle-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Circle (C)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg></button>
+                <button id="triangle-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Triangle"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 22h20L12 2z"/></svg></button>
+                <button id="text-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Add Text (T)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/></svg></button>
+                <button id="math-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Insert Math (M)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.27 21.26a1.18 1.18 0 0 0 1.46 0C19.26 18.2 22 13.92 22 9.49A6.51 6.51 0 0 0 15.51 3a6.26 6.26 0 0 0-4.66 2.1l-.85.85-.85-.85a6.26 6.26 0 0 0-4.66-2.1A6.51 6.51 0 0 0 2 9.49c0 4.43 2.74 8.71 8.27 11.77z"/><path d="M12 7v6"/><path d="M10 9h4"/></svg></button>
+                <button id="pdf-import-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Import PDF"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><path d="M14 2v6h6"/><path d="M2 15.5v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2z"/></svg></button>
+                <input type="file" id="pdf-input" class="hidden" accept="application/pdf">
+                <button id="image-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Add Image (I)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></button>
+                <input type="file" id="image-input" class="hidden" accept="image/*">
+                
+                <!-- Separator -->
+                <div class="border-l border-gray-300 dark:border-gray-600 h-6 mx-1"></div>
+                
+                <!-- Tool Settings -->
+                <div class="flex items-center space-x-2" id="tool-settings">
                      <div class="flex items-center space-x-2"><label for="pen-size" class="text-sm">Pen:</label><input type="range" id="pen-size" min="1" max="50" value="3.5" step="0.5" class="w-20" title="Pen Thickness"><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="2" title="Extra Small Pen">XS</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="3.5" title="Small Pen">S</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="5" title="Medium Pen">M</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="10" title="Large Pen">L</button><button class="pen-size-btn text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700" data-size="20" title="Extra Large Pen">XL</button></div>
                     <div class="flex items-center space-x-1"><input type="checkbox" id="stabilizer-toggle" class="w-4 h-4 rounded" checked><label for="stabilizer-toggle" class="text-sm cursor-pointer" title="Smooth Drawing">Stabilizer</label></div>
                     <div class="flex items-center space-x-2"><label for="eraser-size" class="text-sm">Eraser:</label><input type="range" id="eraser-size" min="1" max="100" value="20" class="w-20" title="Eraser Thickness"></div>
                     <div class="flex items-center space-x-2" id="color-palette"></div>
                 </div>
-                 <div class="flex items-center space-x-2 flex-wrap">
+                
+                <!-- Separator -->
+                <div class="border-l border-gray-300 dark:border-gray-600 h-6 mx-1"></div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center space-x-2">
                     <button id="undo-btn" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Undo (Ctrl+Z)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 14H6.5a3.5 3.5 0 1 1 0-7H15"/><path d="m9 17-3-3 3-3"/></svg></button>
                     <button id="redo-btn" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Redo (Ctrl+Y)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h14.5a3.5 3.5 0 1 0 0-7H8"/><path d="m15 17 3-3-3-3"/></svg></button>
                     <button id="export-pdf-btn" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Export as PDF"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 12v6"/><path d="m13 15-3 3-3-3"/></svg></button>
@@ -175,7 +177,9 @@
             
             const HISTORY_LIMIT = 30;
 
-            const lightColors = ['#111827', '#DC2626', '#DB2777', '#9333EA', '#2563EB', '#059669', '#F59E0B'];
+            // FIX: Optimized color pairs for better contrast and feel between light/dark modes.
+            // Yellow in dark mode now maps to a dark blue in light mode.
+            const lightColors = ['#111827', '#DC2626', '#DB2777', '#9333EA', '#2563EB', '#059669', '#1E40AF'];
             const darkColors =  ['#F9FAFB', '#F87171', '#F472B6', '#C084FC', '#60A5FA', '#34D399', '#FBBF24'];
             const customProps = ['isMath', 'isShape', 'sourceData', 'isEraser', 'isPdfImage', 'isInverted'];
 
@@ -260,7 +264,6 @@
                 canvas.isDrawingMode = (tool === 'pixel-eraser');
                 canvas.selection = isSelectTool;
 
-                // FIX: Differentiate between PDF images (static) and regular images (interactive)
                 canvas.forEachObject(obj => {
                     if (obj.isPdfImage) {
                         obj.selectable = false;
@@ -327,7 +330,6 @@
                 
                 canvas.loadFromJSON(state, () => {
                     const isSelectTool = currentTool === 'select';
-                    // FIX: Differentiate between PDF images (static) and regular images (interactive) on load
                     canvas.forEachObject(obj => {
                         if (obj.isMath && obj.sourceData) {
                              rerenderMath(obj);
@@ -524,7 +526,7 @@
             }
             function handleDragEnd(e) { e.target.classList.remove('dragging'); draggedSlideIndex = null; }
 
-            // --- MODALS & MATH & AI ---
+            // --- MODALS & MATH ---
             function showModal(title, body, footer) { document.getElementById('modal-title').innerHTML = title; const modalBody = document.getElementById('modal-body'); modalBody.innerHTML = ''; if(typeof body === 'string') { modalBody.innerHTML = body; } else { modalBody.appendChild(body); } const footerEl = document.getElementById('modal-footer'); footerEl.innerHTML = ''; if(footer) footerEl.appendChild(footer); document.getElementById('modal').classList.add('visible'); }
             function hideModal() { document.getElementById('modal').classList.remove('visible'); }
             function showMathModal() {
@@ -548,49 +550,7 @@
                     });
                 }).catch(err => { errorEl.textContent = `MathJax Error: ${err.message}`; });
             }
-            async function callGeminiApi(prompt, imageData = null) {
-                let chatHistory = [{ role: "user", parts: [{ text: prompt }] }]; if (imageData) { chatHistory[0].parts.push({ inlineData: { mimeType: "image/png", data: imageData } }); }
-                const payload = { contents: chatHistory }; const apiKey = ""; const apiUrl = '/.netlify/functions/gemini';
-                try {
-                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
-                    const data = await response.json();
-                    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content.parts[0].text) {
-                        return data.candidates[0].content.parts[0].text;
-                    } else {
-                        return "Sorry, I couldn't generate a response. Please try again.";
-                    }
-                } catch(error) { console.error("Gemini API call failed:", error); return `Error: Could not get a response. ${error.message}`; }
-            }
-            async function handleExplainTool() {
-                const activeObject = canvas.getActiveObject(); if (!activeObject) { showModal("✨ Explain This", "<p>Please select an object on the canvas first.</p>", createDialogButtons({text: 'OK', action: hideModal, class: 'bg-blue-500 text-white'})); return; }
-                showModal("✨ Explain This", "<p>✨ Thinking... Please wait.</p>", null);
-                let prompt; let imageData = null;
-                if (activeObject.isMath && activeObject.sourceData) { prompt = `Explain the following mathematical expression in a clear and concise way for a student: ${activeObject.sourceData}`; }
-                else if (activeObject.type === 'i-text') { prompt = `Explain the following concept or term: "${activeObject.text}"`; }
-                else { prompt = "Explain what is shown in this image. If it's a diagram, explain its components and what it represents. If it's a drawing, describe it."; imageData = activeObject.toDataURL({ format: 'png' }).split(',')[1]; }
-                const explanation = await callGeminiApi(prompt, imageData);
-                const explanationBody = document.createElement('div'); explanationBody.className = 'prose prose-sm dark:prose-invert max-h-96 overflow-y-auto'; explanationBody.textContent = explanation;
-                showModal("✨ Explanation", explanationBody, createDialogButtons({text: 'Close', action: hideModal, class: 'bg-blue-500 text-white'}));
-            }
-            function showBrainstormModal() {
-                const body = `<p class="text-sm mb-2 text-gray-600 dark:text-gray-400">Enter a topic and Gemini will generate ideas for you.</p><input id="brainstorm-input" class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-gray-200" placeholder="e.g., Photosynthesis, The Cold War...">`;
-                showModal("✨ Brainstorm Ideas", body, createDialogButtons({ text: 'Cancel', action: hideModal, class: 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500' },{ text: 'Generate', action: handleBrainstorm, class: 'bg-blue-500 text-white hover:bg-blue-600' }));
-                document.getElementById('brainstorm-input').focus();
-            }
-            async function handleBrainstorm() {
-                const topic = document.getElementById('brainstorm-input').value; if (!topic.trim()) { return; }
-                showModal("✨ Brainstorming", "<p>✨ Generating ideas... Please wait.</p>", null);
-                const prompt = `Brainstorm a list of key concepts, ideas, or discussion points about the following topic: "${topic}". Present them as a concise bulleted list.`;
-                const ideas = await callGeminiApi(prompt);
-                const ideasBody = document.createElement('div'); ideasBody.className = 'prose prose-sm dark:prose-invert max-h-96 overflow-y-auto'; ideasBody.textContent = ideas;
-                showModal("✨ Brainstorm Results", ideasBody, createDialogButtons({ text: 'Close', action: hideModal, class: 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500' },{ text: 'Insert on Canvas', action: () => insertBrainstormIdeas(ideas), class: 'bg-blue-500 text-white hover:bg-blue-600' }));
-            }
-            function insertBrainstormIdeas(ideas) {
-                 const text = new fabric.IText(ideas.replace(/•/g, '\n•'), { left: canvas.getCenter().left, top: canvas.getCenter().top, originX: 'center', originY: 'center', fill: activeColor, fontSize: 24, fontFamily: 'Virgil', padding: 10, shadow: 'rgba(0,0,0,0.3) 2px 2px 4px' });
-                 canvas.add(text).setActiveObject(text).renderAll(); text.enterEditing(); saveState(); hideModal();
-            }
-
+            
             // --- FILE IMPORT/EXPORT ---
             async function importPDF(file) {
                 const fileURL = URL.createObjectURL(file);
@@ -627,7 +587,9 @@
                                 selectable: false,
                                 evented: false,
                                 isPdfImage: true,
-                                isInverted: false
+                                isInverted: false,
+                                // FIX: Disable object caching for images to prevent filter rendering issues.
+                                objectCaching: false 
                             }],
                             background: isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor
                         };
@@ -689,8 +651,6 @@
             document.getElementById('pdf-import-tool').onclick = () => document.getElementById('pdf-input').click();
             document.getElementById('pdf-input').onchange = (e) => { const file = e.target.files[0]; if (file) { importPDF(file); } e.target.value = null; };
             document.getElementById('modal').onclick = (e) => { if (e.target.id === 'modal') hideModal(); };
-            document.getElementById('explain-tool').onclick = handleExplainTool;
-            document.getElementById('brainstorm-tool').onclick = showBrainstormModal;
             document.getElementById('pen-size').oninput = (e) => { penSize = e.target.value; updateDrawingTool(); };
             document.getElementById('eraser-size').oninput = (e) => { 
                 eraserSize = e.target.value;
@@ -705,7 +665,6 @@
                     if (e.key === 'Escape') hideModal(); 
                     if (e.key === 'Enter') { 
                         if (document.getElementById('latex-input')) { e.preventDefault(); insertMath(); } 
-                        if (document.getElementById('brainstorm-input')) { e.preventDefault(); handleBrainstorm(); }
                         if (document.getElementById('pdf-filename-input')) { e.preventDefault(); document.querySelector('.bg-blue-500').click(); }
                     } 
                     return; 
@@ -819,7 +778,6 @@
                     let somethingErased = false;
                     for (let i = objects.length - 1; i >= 0; i--) {
                         const obj = objects[i];
-                        // FIX: Allow erasing regular images but not PDF background images
                         if (obj && erasableTypes.includes(obj.type) && !obj.isPdfImage && obj.intersectsWithObject(hitArea)) {
                            canvas.remove(obj);
                            somethingErased = true;
@@ -918,11 +876,12 @@
                 } else if (isDrawingShape) {
                     isDrawingShape = false;
                     if(shape) {
+                        shape.set({ selectable: true, evented: true });
                         shape.setCoords();
                         saveState();
                     }
                     shape = null;
-                    setTool('select');
+                    // FIX: Removed `setTool('select')` to keep the current shape tool active.
                 }
             }
 
@@ -967,7 +926,9 @@
                         left: canvas.getCenter().left, top: canvas.getCenter().top, 
                         originX: 'center', originY: 'center', 
                         cornerColor: '#3B82F6', cornerSize: 10, transparentCorners: false,
-                        isInverted: false
+                        isInverted: false,
+                        // FIX: Disable object caching for images to prevent filter rendering issues.
+                        objectCaching: false
                     });
                     
                     canvas.add(img);

@@ -177,8 +177,6 @@
             
             const HISTORY_LIMIT = 30;
 
-            // FIX: Optimized color pairs for better contrast and feel between light/dark modes.
-            // Yellow in dark mode now maps to a dark blue in light mode.
             const lightColors = ['#111827', '#DC2626', '#DB2777', '#9333EA', '#2563EB', '#059669', '#1E40AF'];
             const darkColors =  ['#F9FAFB', '#F87171', '#F472B6', '#C084FC', '#60A5FA', '#34D399', '#FBBF24'];
             const customProps = ['isMath', 'isShape', 'sourceData', 'isEraser', 'isPdfImage', 'isInverted'];
@@ -319,7 +317,7 @@
                 if(activeBtn) activeBtn.classList.add('active');
             }
 
-
+            // FIX: Simplified loadState to be more direct and avoid promise-related race conditions.
             function loadState(state, callback) {
                 if (!state) {
                     canvas.clear();
@@ -330,21 +328,31 @@
                 
                 canvas.loadFromJSON(state, () => {
                     const isSelectTool = currentTool === 'select';
+                    
                     canvas.forEachObject(obj => {
                         if (obj.isMath && obj.sourceData) {
                              rerenderMath(obj);
                         }
-                        if (obj.isPdfImage) {
-                            obj.selectable = false;
-                            obj.evented = false;
-                        } else if (obj.isEraser) {
+                        
+                        // CRITICAL FIX: Disable object caching on all images to prevent filter rendering bugs.
+                        if (obj.type === 'image') {
+                            obj.objectCaching = false;
+                        }
+
+                        if (obj.isPdfImage || obj.isEraser) {
                             obj.selectable = false;
                             obj.evented = false;
                         } else {
                             obj.selectable = isSelectTool;
                             obj.evented = isSelectTool;
                         }
+
+                        // Apply filters directly if they exist in the loaded data
+                        if (obj.filters && obj.filters.length > 0) {
+                            obj.applyFilters();
+                        }
                     });
+
                     canvas.renderAll();
                     if (callback) callback();
                 });
@@ -552,6 +560,7 @@
             }
             
             // --- FILE IMPORT/EXPORT ---
+            // FIX: Replaced PDF import logic with a more robust pre-scaling method to prevent filter bugs.
             async function importPDF(file) {
                 const fileURL = URL.createObjectURL(file);
                 showModal('Importing PDF', `<p id="pdf-import-progress">Loading PDF...</p>`, null);
@@ -564,9 +573,13 @@
                     for (let i = 1; i <= numPages; i++) {
                         document.getElementById('pdf-import-progress').textContent = `Processing page ${i} of ${numPages}...`;
                         const page = await pdf.getPage(i);
-                        const viewport = page.getViewport({ scale: 1.5 });
                         
-                        const scale = Math.min(canvas.width / viewport.width, canvas.height / viewport.height);
+                        const pageViewport = page.getViewport({ scale: 1.0 });
+                        const scale = Math.min(
+                            (canvas.width * 0.95) / pageViewport.width,
+                            (canvas.height * 0.95) / pageViewport.height
+                        );
+                        const viewport = page.getViewport({ scale: scale });
                         
                         const tempCanvas = document.createElement('canvas');
                         const tempCtx = tempCanvas.getContext('2d');
@@ -582,14 +595,12 @@
                                 type: 'image', version: '5.3.1', originX: 'center', originY: 'center',
                                 left: canvas.width / 2, top: canvas.height / 2,
                                 width: viewport.width, height: viewport.height, src: imgDataUrl,
-                                scaleX: scale, scaleY: scale,
                                 crossOrigin: 'anonymous', 
                                 selectable: false,
                                 evented: false,
                                 isPdfImage: true,
                                 isInverted: false,
-                                // FIX: Disable object caching for images to prevent filter rendering issues.
-                                objectCaching: false 
+                                objectCaching: false
                             }],
                             background: isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor
                         };
@@ -612,6 +623,7 @@
                     hideModal();
                 }
             }
+
             function handlePaste(e) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || canvas.getActiveObject()?.isEditing) return;
                 const items = e.clipboardData?.items;
@@ -881,7 +893,6 @@
                         saveState();
                     }
                     shape = null;
-                    // FIX: Removed `setTool('select')` to keep the current shape tool active.
                 }
             }
 
@@ -927,7 +938,6 @@
                         originX: 'center', originY: 'center', 
                         cornerColor: '#3B82F6', cornerSize: 10, transparentCorners: false,
                         isInverted: false,
-                        // FIX: Disable object caching for images to prevent filter rendering issues.
                         objectCaching: false
                     });
                     
@@ -974,7 +984,7 @@
 
             async function toggleDarkMode() {
                 saveCurrentSlideState();
-                const hasInvertibleMedia = slides.some(s => s.data.objects.some(o => o.isPdfImage || (o.type === 'image' && !o.isPdfImage && !o.isEraser)));
+                const hasInvertibleMedia = slides.some(s => s.data && s.data.objects && s.data.objects.some(o => o.isPdfImage || (o.type === 'image' && !o.isPdfImage && !o.isEraser)));
                 
                 const performToggle = (invertMedia) => {
                     isDarkMode = !isDarkMode;
@@ -997,7 +1007,7 @@
                     const newBgColor = isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor;
 
                     for (const slide of slides) {
-                        if (!slide.data.objects) continue;
+                        if (!slide.data || !slide.data.objects) continue;
                         slide.data.objects.forEach(obj => {
                             const isRegularImage = obj.type === 'image' && !obj.isPdfImage;
                             if ((obj.isPdfImage || isRegularImage) && invertMedia) {
@@ -1008,9 +1018,8 @@
                                 obj[propToChange] = newBgColor;
                             } else {
                                 const processColor = (prop) => {
-                                    const currentColor = obj[prop];
-                                    if (typeof currentColor === 'string' && currentColor !== 'transparent' && currentColor !== null) {
-                                        const normalizedColor = new fabric.Color(currentColor).toHex().toLowerCase();
+                                    if (typeof obj[prop] === 'string' && obj[prop] !== 'transparent' && obj[prop] !== null) {
+                                        const normalizedColor = new fabric.Color(obj[prop]).toHex().toLowerCase();
                                         if (colorMap.has(normalizedColor)) {
                                             obj[prop] = colorMap.get(normalizedColor);
                                         }
@@ -1033,18 +1042,13 @@
                         });
                         slide.data.background = newBgColor;
                         if (slide.historyIndex > -1 && slide.history[slide.historyIndex]) {
-                            slide.history[slide.historyIndex] = slide.data;
+                            slide.history[slide.historyIndex] = JSON.parse(JSON.stringify(slide.data));
                         }
                     }
                     
                     const currentSlide = slides[currentSlideIndex];
                     if (currentSlide) {
                         loadState(currentSlide.data, () => {
-                            canvas.getObjects().forEach(obj => {
-                                if (obj.isInverted) {
-                                    obj.applyFilters();
-                                }
-                            });
                             canvas.setBackgroundColor(newBgColor, canvas.renderAll.bind(canvas));
                             hideModal();
                         });
@@ -1061,7 +1065,7 @@
                         "Invert Media Colors?",
                         "<p>Invert the colors of imported PDFs and images for better contrast in the new theme?</p>",
                         createDialogButtons(
-                            { text: 'No', action: () => { hideModal(); performToggle(false); }, class: 'bg-ray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500' },
+                            { text: 'No', action: () => { hideModal(); performToggle(false); }, class: 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500' },
                             { text: 'Yes, Invert', action: () => { hideModal(); performToggle(true); }, class: 'bg-blue-500 text-white hover:bg-blue-600' }
                         )
                     );
@@ -1142,22 +1146,30 @@
                            
                            await Promise.all(renderingPromises);
                            
-                           tempCanvas.getObjects().forEach(obj => {
-                               if (obj.isInverted && obj.filters.length > 0) {
-                                   obj.applyFilters();
-                               }
-                           });
-
-                           tempCanvas.renderAll(); 
-                           const imgData = tempCanvas.toDataURL({ format: 'png' });
-                           
-                           if (i > 0) { 
-                               doc.addPage([originalWidth, originalHeight], originalWidth > originalHeight ? 'landscape' : 'portrait'); 
+                           const invertedObjects = tempCanvas.getObjects().filter(obj => obj.isInverted);
+                           if (invertedObjects.length > 0) {
+                                let filtersApplied = 0;
+                                invertedObjects.forEach(obj => {
+                                    obj.applyFilters(() => {
+                                        filtersApplied++;
+                                        if (filtersApplied === invertedObjects.length) {
+                                            tempCanvas.renderAll();
+                                            const imgData = tempCanvas.toDataURL({ format: 'png' });
+                                            if (i > 0) doc.addPage([originalWidth, originalHeight], originalWidth > originalHeight ? 'landscape' : 'portrait');
+                                            doc.addImage(imgData, 'PNG', 0, 0, originalWidth, originalHeight, undefined, 'FAST');
+                                            tempCanvas.dispose(); 
+                                            resolve();
+                                        }
+                                    });
+                                });
+                           } else {
+                               tempCanvas.renderAll(); 
+                               const imgData = tempCanvas.toDataURL({ format: 'png' });
+                               if (i > 0) doc.addPage([originalWidth, originalHeight], originalWidth > originalHeight ? 'landscape' : 'portrait');
+                               doc.addImage(imgData, 'PNG', 0, 0, originalWidth, originalHeight, undefined, 'FAST');
+                               tempCanvas.dispose(); 
+                               resolve();
                            }
-                           doc.addImage(imgData, 'PNG', 0, 0, originalWidth, originalHeight, undefined, 'FAST');
-                           
-                           tempCanvas.dispose(); 
-                           resolve();
                        });
                     });
                 }

@@ -1225,14 +1225,6 @@
                 });
                 showModal('Exporting PDF', `<p id="pdf-export-progress">Starting export...</p>`, null);
 
-                const applyFiltersAsync = (obj) => new Promise(resolve => {
-                    if (obj.filters && Array.isArray(obj.filters) && obj.filters.length > 0) {
-                        obj.applyFilters(resolve);
-                    } else {
-                        resolve();
-                    }
-                });
-
                 for (let i = 0; i < slides.length; i++) {
                     document.getElementById('pdf-export-progress').textContent = `Processing slide ${i + 1} of ${slides.length}...`;
                     
@@ -1247,14 +1239,16 @@
                     const mathObjects = tempCanvas.getObjects().filter(obj => obj.isMath);
                     await Promise.all(mathObjects.map(obj => renderMathForExport(obj, tempCanvas)));
 
-                    // BUG FIX: Re-instantiate filters manually for inverted objects.
+                    // FIX: Re-instantiate filters after loading from JSON.
                     const invertedObjects = tempCanvas.getObjects().filter(obj => obj.isInverted);
                     for (const obj of invertedObjects) {
-                        obj.filters = []; // Clear potentially broken filters from JSON
-                        obj.filters.push(new fabric.Image.filters.Invert()); // Add a fresh, valid filter instance
-                        await applyFiltersAsync(obj); // Apply the new filter
+                        // The filters array from JSON contains a plain object.
+                        // We replace it with a new instance of the fabric filter.
+                        obj.filters = [new fabric.Image.filters.Invert()];
                     }
 
+                    // We don't need to call applyFilters manually.
+                    // renderAll() and toDataURL() will handle applying the filters correctly.
                     tempCanvas.renderAll();
                     
                     const imgData = tempCanvas.toDataURL({ format: 'jpeg', quality: 0.9 });

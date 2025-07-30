@@ -1082,8 +1082,29 @@
             }
 
             function deleteSelected() { canvas.getActiveObjects().forEach(obj => canvas.remove(obj)); canvas.discardActiveObject().renderAll(); saveState(); }
-            function undo() { const slide = slides[currentSlideIndex]; if (slide && slide.historyIndex > 0) { slide.historyIndex--; loadState(slide.history[slide.historyIndex]); } }
-            function redo() { const slide = slides[currentSlideIndex]; if (slide && slide.historyIndex < slide.history.length - 1) { slide.historyIndex++; loadState(slide.history[slide.historyIndex]); } }
+            
+            function undo() {
+                const slide = slides[currentSlideIndex];
+                if (slide && slide.historyIndex > 0) {
+                    slide.historyIndex--;
+                    const stateToLoad = slide.history[slide.historyIndex];
+                    // FIX: Set the slide's canonical data to the state we are loading.
+                    // This ensures that if we switch slides right after undoing, the correct state is saved.
+                    slide.data = stateToLoad;
+                    loadState(stateToLoad);
+                }
+            }
+
+            function redo() {
+                const slide = slides[currentSlideIndex];
+                if (slide && slide.historyIndex < slide.history.length - 1) {
+                    slide.historyIndex++;
+                    const stateToLoad = slide.history[slide.historyIndex];
+                    // FIX: Set the slide's canonical data to the state we are loading.
+                    slide.data = stateToLoad;
+                    loadState(stateToLoad);
+                }
+            }
             
             function populateColorPalette() {
                 const palette = document.getElementById('color-palette'); palette.innerHTML = ''; 

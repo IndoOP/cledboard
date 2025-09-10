@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link rel="shortcut icon" href="https://www.google.com/s2/favicons?domain=fabricjs.com" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CledBoard - Comfort Brush</title>
+    <title>CledBoard - Enhanced Tools</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -23,13 +23,8 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <style>
-        @font-face {
-            font-family: 'Virgil';
-            src: url('https://excalidraw.nyc3.cdn.digitaloceanspaces.com/fonts/Virgil.woff2') format('woff2');
-            font-display: swap;
-        }
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; }
         .canvas-container { border-radius: 0.5rem; touch-action: none; }
         .tool-btn, .color-btn, .slide-thumb, .pen-size-btn { transition: all 0.2s ease-in-out; }
@@ -113,6 +108,20 @@
                     <div class="flex items-center space-x-2" id="color-palette"></div>
                     <div class="border-l border-gray-300 dark:border-gray-600 h-6 mx-1"></div>
                     <div id="pen-thickness-container" class="flex items-center space-x-1 p-1 bg-gray-100 dark:bg-gray-700 rounded-md"></div>
+                    <!-- NEW: Text Formatting Toolbar -->
+                    <div id="text-settings" class="hidden items-center space-x-2 p-1 bg-gray-100 dark:bg-gray-700 rounded-md">
+                        <select id="font-family-select" class="p-1 border rounded-md bg-gray-50 dark:bg-gray-600 dark:text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" title="Font Family">
+                            <option style="font-family: Poppins">Poppins</option>
+                            <option style="font-family: Arial">Arial</option>
+                            <option style="font-family: Verdana">Verdana</option>
+                            <option style="font-family: 'Times New Roman'">Times New Roman</option>
+                            <option style="font-family: 'Courier New'">Courier New</option>
+                        </select>
+                        <input type="number" id="font-size-input" min="1" max="500" class="w-16 p-1 border rounded-md bg-gray-50 dark:bg-gray-600 dark:text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" title="Font Size">
+                        <button id="text-bold-btn" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 font-bold" title="Bold">B</button>
+                        <button id="text-italic-btn" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 italic" title="Italic">I</button>
+                        <button id="text-underline-btn" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 underline" title="Underline">U</button>
+                    </div>
                     <button id="pen-settings-tool" class="tool-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700" title="Pen Settings">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                     </button>
@@ -186,34 +195,39 @@
             let isDrawingShape = false;
             let shape, startPoint;
             
+            // State for new stroke eraser
+            let isStrokeErasing = false;
+            let erasedOnStroke = new Set();
+            
             let draggedSlideIndex = null;
             
             const HISTORY_LIMIT = 50;
 
             const lightColors = ['#000000', '#1E3A8A', '#065F46', '#7C2D12', '#B91C1C', '#4B5563'];
             const darkColors =  ['#FFFFFF', '#60A5FA', '#34D399', '#FBBF24', '#F87171', '#E5E7EB'];
-            const customProps = ['isMath', 'isShape', 'sourceData', 'isEraser', 'isPdfImage', 'isInverted', 'isHandwriting', 'erasable'];
+            const customProps = ['isMath', 'isShape', 'sourceData', 'isEraserStroke', 'isPdfImage', 'isInverted', 'isHandwriting', 'erasable'];
 
             fabric.Object.prototype.objectCaching = true;
             
             let penThickness = 3;
-            
-            // Virgil Font IText Cursor Fix
-            fabric.IText.prototype.getCursorBoundaries = function(index, skipCaching) {
-              const b = fabric.Text.prototype.getCursorBoundaries.call(this, index, skipCaching);
-              b.left += 2; 
-              b.top += 1; 
-              return b;
-            };
+
+            // --- UI ELEMENT GETTERS ---
+            const textSettingsEl = document.getElementById('text-settings');
+            const fontFamilySelect = document.getElementById('font-family-select');
+            const fontSizeInput = document.getElementById('font-size-input');
+            const textBoldBtn = document.getElementById('text-bold-btn');
+            const textItalicBtn = document.getElementById('text-italic-btn');
+            const textUnderlineBtn = document.getElementById('text-underline-btn');
 
             // ===================================================================================
-            // REFINED: SMOOTH BRUSH IMPLEMENTATION V2
+            // REFINED: SMOOTH BRUSH IMPLEMENTATION V3 (with Eraser Cursor Support)
             // ===================================================================================
             const SmoothBrush = fabric.util.createClass(fabric.BaseBrush, {
                 type: 'SmoothBrush',
                 color: '#000000',
                 width: 10,
                 _points: null,
+                isEraser: false, // NEW: Property to enable eraser cursor
 
                 initialize: function(canvas) {
                     this.canvas = canvas;
@@ -224,12 +238,18 @@
                     this._prepareForDrawing(pointer);
                     this._captureDrawingPath(pointer);
                     this._render();
+                    if (this.isEraser) {
+                        this._renderEraserCursor(pointer);
+                    }
                 },
 
                 onMouseMove: function(pointer) {
                     if (this._captureDrawingPath(pointer) && this._points.length > 1) {
                         this.canvas.clearContext(this.canvas.contextTop);
                         this._render();
+                    }
+                    if (this.isEraser) {
+                        this._renderEraserCursor(pointer);
                     }
                 },
 
@@ -290,6 +310,17 @@
                     ctx.stroke();
                     ctx.restore();
                 },
+
+                _renderEraserCursor: function(pointer) {
+                    const ctx = this.canvas.contextTop;
+                    ctx.save();
+                    ctx.strokeStyle = isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(pointer.x, pointer.y, eraserSize / 2, 0, Math.PI * 2, false);
+                    ctx.stroke();
+                    ctx.restore();
+                },
                 
                 _getSimplifiedPoints: function() {
                     if (this._points.length < 3) {
@@ -327,7 +358,8 @@
                             left: this._points[0].x, top: this._points[0].y,
                             radius: this.width / 2, fill: this.color,
                             originX: 'center', originY: 'center',
-                            isHandwriting: true,
+                            isHandwriting: !this.isEraser,
+                            isEraserStroke: this.isEraser,
                             selectable: false, evented: false,
                         });
                         this.canvas.add(dot);
@@ -350,158 +382,14 @@
                     var path = new fabric.Path(pathData, {
                         fill: null, stroke: this.color, strokeWidth: this.width,
                         strokeLineCap: 'round', strokeLineJoin: 'round',
-                        strokeUniform: true, isHandwriting: true,
+                        strokeUniform: true, 
+                        isHandwriting: !this.isEraser,
+                        isEraserStroke: this.isEraser,
                         objectCaching: false, selectable: false, evented: false,
                     });
                     return path;
                 }
             });
-            
-            // ===================================================================================
-            // FIXED: CUSTOM PATH ERASER BRUSH
-            // ===================================================================================
-            const PathEraserBrush = fabric.util.createClass(fabric.BaseBrush, {
-                type: 'PathEraserBrush',
-                width: 20,
-                _erasing: false,
-                _touchedPaths: new Set(),
-
-                initialize: function(canvas) {
-                    this.canvas = canvas;
-                },
-
-                onMouseDown: function(pointer) {
-                    this._erasing = true;
-                    this._touchedPaths.clear();
-                    this.erase(pointer);
-                },
-
-                onMouseMove: function(pointer) {
-                    if (!this._erasing) return;
-                    this.erase(pointer);
-                    this._renderCursor(pointer);
-                },
-
-                onMouseUp: function() {
-                    if (this._erasing) {
-                       this.finalizeErasing();
-                    }
-                    this._erasing = false;
-                    this.canvas.clearContext(this.canvas.contextTop);
-                },
-                
-                _renderCursor: function(pointer) {
-                    const ctx = this.canvas.contextTop;
-                    ctx.save();
-                    ctx.clearRect(0, 0, this.canvas.width * (window.devicePixelRatio || 1), this.canvas.height * (window.devicePixelRatio || 1));
-                    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
-                    ctx.strokeStyle = isDarkMode ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.arc(pointer.x, pointer.y, this.width / 2, 0, Math.PI * 2, false);
-                    ctx.stroke();
-                    ctx.restore();
-                },
-
-                erase: function(pointer) {
-                    const eraserRadius = this.width / 2;
-                    const objects = this.canvas.getObjects('path').filter(obj => obj.isHandwriting);
-                    let needsRender = false;
-
-                    for (const obj of objects) {
-                        if (!obj.intersectsWithRect(
-                            new fabric.Point(pointer.x - eraserRadius, pointer.y - eraserRadius),
-                            new fabric.Point(pointer.x + eraserRadius, pointer.y + eraserRadius)
-                        )) {
-                            continue;
-                        }
-                        
-                        const transform = obj.calcTransformMatrix();
-                        const newPaths = [];
-                        let currentPathData = [];
-                        let pathModified = false;
-
-                        for (let i = 0; i < obj.path.length; i++) {
-                            const cmd = obj.path[i];
-                            const commandType = cmd[0].toUpperCase();
-                            let point;
-
-                            if (commandType === 'M' || commandType === 'L') {
-                                point = { x: cmd[1], y: cmd[2] };
-                            } else if (commandType === 'Q') {
-                                point = { x: cmd[3], y: cmd[4] };
-                            } else if (commandType === 'C') {
-                                point = { x: cmd[5], y: cmd[6] };
-                            }
-
-                            if (point) {
-                                const globalPoint = fabric.util.transformPoint(point, transform);
-                                if (Math.hypot(globalPoint.x - pointer.x, globalPoint.y - pointer.y) < eraserRadius) {
-                                    pathModified = true;
-                                    if (currentPathData.length > 1) {
-                                        newPaths.push(currentPathData);
-                                    }
-                                    currentPathData = [];
-                                } else {
-                                    if (currentPathData.length === 0 && commandType !== 'M') {
-                                        const lastPoint = this.findLastPoint(obj.path, i);
-                                        currentPathData.push(['M', lastPoint.x, lastPoint.y]);
-                                    }
-                                    currentPathData.push(cmd);
-                                }
-                            } else {
-                                if (currentPathData.length > 0) {
-                                    currentPathData.push(cmd);
-                                }
-                            }
-                        }
-
-                        if (pathModified) {
-                            this._touchedPaths.add(obj);
-                            if (currentPathData.length > 1) {
-                                newPaths.push(currentPathData);
-                            }
-                            
-                            this.canvas.remove(obj);
-
-                            newPaths.forEach(pathData => {
-                                const newPath = new fabric.Path(pathData, {
-                                    ...obj.toObject(),
-                                    path: pathData,
-                                    left: obj.left,
-                                    top: obj.top,
-                                    objectCaching: false,
-                                });
-                                this.canvas.add(newPath);
-                            });
-                            needsRender = true;
-                        }
-                    }
-                    if (needsRender) {
-                        this.canvas.requestRenderAll();
-                    }
-                },
-                
-                findLastPoint: function(pathData, upToIndex) {
-                    for (let i = upToIndex - 1; i >= 0; i--) {
-                        const cmd = pathData[i];
-                        const type = cmd[0].toUpperCase();
-                        if (type === 'M' || type === 'L') return { x: cmd[1], y: cmd[2] };
-                        if (type === 'Q') return { x: cmd[3], y: cmd[4] };
-                        if (type === 'C') return { x: cmd[5], y: cmd[6] };
-                    }
-                    return { x: 0, y: 0 };
-                },
-
-                finalizeErasing: function() {
-                    if (this._touchedPaths.size > 0) {
-                        this._touchedPaths.forEach(p => p.set('objectCaching', true));
-                        saveState();
-                    }
-                    this._touchedPaths.clear();
-                }
-            });
-
 
             // --- INITIALIZATION ---
             function initCanvas() {
@@ -527,18 +415,11 @@
             
             function setupEventListeners() {
                 canvas.on('object:modified', () => saveState());
-                canvas.on('path:created', () => saveState());
-
-                canvas.on('mouse:down', function (opt) {
-                    if (currentTool === 'stroke-eraser') {
-                        const target = canvas.findTarget(opt.e, false);
-                        if (target && target.isHandwriting) { // Simplified check
-                            canvas.remove(target);
-                            canvas.requestRenderAll();
-                            saveState();
-                        }
-                    }
-                });
+                canvas.on('path:created', (e) => { saveState(); });
+                canvas.on('selection:created', handleSelection);
+                canvas.on('selection:updated', handleSelection);
+                canvas.on('selection:cleared', hideTextToolbar);
+                canvas.on('text:changed', saveState);
 
                 const canvasContainer = canvas.getElement().parentElement;
                 canvasContainer.addEventListener('pointerdown', handlePointerDown, { passive: false });
@@ -548,6 +429,13 @@
                 window.addEventListener('paste', handlePaste);
                 window.addEventListener('resize', resizeCanvas);
                 window.addEventListener('beforeunload', handleBeforeUnload);
+
+                // Text toolbar listeners
+                fontFamilySelect.onchange = () => applyTextSetting('fontFamily', fontFamilySelect.value);
+                fontSizeInput.onchange = () => applyTextSetting('fontSize', parseInt(fontSizeInput.value, 10));
+                textBoldBtn.onclick = () => toggleTextStyle('fontWeight', 'bold', 'normal');
+                textItalicBtn.onclick = () => toggleTextStyle('fontStyle', 'italic', 'normal');
+                textUnderlineBtn.onclick = () => toggleTextStyle('underline', true, false);
             }
 
             function handleBeforeUnload(e) {
@@ -581,52 +469,42 @@
                 }
             }
             
-            function createCursor(svgPath, color) {
-                const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='${color}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${svgPath}</svg>`;
-                return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
-            }
-
             function setTool(tool) {
                 currentTool = tool;
+                canvas.clearContext(canvas.contextTop);
                 const shapeTools = ['rect', 'circle', 'ellipse', 'triangle', 'line'];
                 const isSelectTool = tool === 'select';
-                const isFreehandTool = tool === 'draw' || tool === 'brush-eraser';
                 
-                canvas.isDrawingMode = isFreehandTool;
+                canvas.isDrawingMode = (tool === 'draw' || tool === 'brush-eraser');
                 canvas.selection = isSelectTool;
 
                 if (tool === 'draw') {
                     canvas.freeDrawingBrush = new SmoothBrush(canvas);
                     canvas.freeDrawingBrush.width = penThickness;
                     canvas.freeDrawingBrush.color = brushColor;
+                    canvas.freeDrawingBrush.isEraser = false;
                 } else if (tool === 'brush-eraser') {
-                    canvas.freeDrawingBrush = new PathEraserBrush(canvas);
+                    canvas.freeDrawingBrush = new SmoothBrush(canvas);
                     canvas.freeDrawingBrush.width = parseInt(eraserSize, 10);
+                    canvas.freeDrawingBrush.color = isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor;
+                    canvas.freeDrawingBrush.isEraser = true;
                 }
 
-                // FIXED: Logic for making objects interactive for eraser tools
                 canvas.forEachObject(obj => {
                     const isSelectable = isSelectTool && !obj.isPdfImage;
                     obj.selectable = isSelectable;
-                    
-                    if (tool === 'stroke-eraser') {
-                        // For stroke eraser, only hand-drawn items should be clickable
-                        obj.evented = !!obj.isHandwriting;
-                    } else {
-                        // For other tools, evented should match selectable status
-                        obj.evented = isSelectable;
-                    }
+                    obj.evented = (tool === 'stroke-eraser') ? !!obj.isHandwriting : isSelectable;
                 });
 
                 const cursorColor = isDarkMode ? 'white' : 'black';
                 let cursorValue = 'default';
 
                 if (tool === 'draw') {
-                    const penSVG = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M2 22l2-7 14-14 5 5-14 14-7 2z' fill='${isDarkMode ? 'white' : 'black'}' stroke='${isDarkMode ? 'black' : 'white'}' stroke-width='1'/></svg>`;
+                    const penSVG = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M2 22l2-7 14-14 5 5-14 14-7 2z' fill='${cursorColor}' stroke='${isDarkMode ? 'black' : 'white'}' stroke-width='1'/></svg>`;
                     cursorValue = `url("${penSVG}") 0 24, auto`;
                 } else if (tool === 'stroke-eraser') {
                     const eraserPath = `<path d='M19.36 2.64A2.5 2.5 0 0 1 22 4.5V6a2 2 0 0 1-2 2h-4.5a2 2 0 0 1-2-2V4.5a2.5 2.5 0 0 1 2.64-1.86Z'/><path d='m21 14-9-9'/><path d='M12.34 9.66 3 19'/><path d='M3 19c-2 2-2 5 0 7s5 2 7 0'/>`;
-                    cursorValue = `${createCursor(eraserPath, cursorColor)} 4 4, auto`;
+                    cursorValue = `url("data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='${cursorColor}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${eraserPath}</svg>`)}") 4 4, auto`;
                 } else if (tool === 'brush-eraser') {
                      cursorValue = 'none';
                 } else if (shapeTools.includes(tool)) {
@@ -649,9 +527,9 @@
 
             function loadState(state, callback) {
                 const applyCurrentBackground = () => {
+                    const plainBgColor = isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor;
                     if (backgroundPattern === 'plain') {
-                        const bgColor = isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor;
-                        canvas.setBackgroundColor(bgColor, canvas.requestRenderAll.bind(canvas));
+                        canvas.setBackgroundColor(plainBgColor, canvas.requestRenderAll.bind(canvas));
                     } else {
                         const bgPattern = new fabric.Pattern({
                             source: createBgPattern(),
@@ -678,7 +556,7 @@
                         
                         const isSelectable = isSelectTool && !obj.isPdfImage;
                         obj.selectable = isSelectable;
-                        obj.evented = isSelectable;
+                        obj.evented = (currentTool === 'stroke-eraser') ? !!obj.isHandwriting : isSelectable;
 
                         if (obj.isHandwriting) {
                             obj.objectCaching = false;
@@ -967,14 +845,26 @@
             }
             function applyBackgroundPattern(pattern) {
                 backgroundPattern = pattern;
-                slides.forEach(slide => { if (slide.data) { slide.data.background = isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor; } });
+                const plainBgColor = isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor;
+
                 if (pattern === 'plain') {
-                    const bgColor = isDarkMode ? darkModeBackgroundColor : lightModeBackgroundColor;
-                    canvas.setBackgroundColor(bgColor, canvas.requestRenderAll.bind(canvas));
+                    canvas.setBackgroundColor(plainBgColor, canvas.requestRenderAll.bind(canvas));
                 } else {
                     const bgPattern = new fabric.Pattern({ source: createBgPattern(), repeat: 'repeat' });
                     canvas.setBackgroundColor(bgPattern, canvas.requestRenderAll.bind(canvas));
                 }
+                
+                // Update eraser strokes on current canvas to match new background
+                canvas.getObjects().filter(obj => obj.isEraserStroke).forEach(obj => {
+                    obj.set('stroke', plainBgColor);
+                    obj.set('fill', plainBgColor); // For dots
+                });
+
+                if (currentTool === 'brush-eraser' && canvas.freeDrawingBrush) {
+                    canvas.freeDrawingBrush.color = plainBgColor;
+                }
+                
+                canvas.requestRenderAll();
                 saveState();
             }
             
@@ -1195,10 +1085,25 @@
                 }
             });
             
-            // --- DRAWING PIPELINE (SHAPES ONLY) ---
+            // --- DRAWING & ERASING PIPELINE ---
 
             function handlePointerDown(e) {
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
+                
+                // Stroke eraser logic
+                if (currentTool === 'stroke-eraser') {
+                    isStrokeErasing = true;
+                    erasedOnStroke.clear();
+                    const target = canvas.findTarget(e, false);
+                    if (target && target.isHandwriting) {
+                        erasedOnStroke.add(target);
+                        canvas.remove(target);
+                        canvas.requestRenderAll();
+                    }
+                    return;
+                }
+
+                // Shape drawing logic
                 const shapeTools = ['rect', 'circle', 'ellipse', 'triangle', 'line'];
                 if (!shapeTools.includes(currentTool)) { return; }
                 
@@ -1233,8 +1138,23 @@
             }
 
             function handlePointerMove(e) {
-                if (!isDrawingShape) return;
+                // Stroke eraser logic
+                if (isStrokeErasing) {
+                    if (e.pointerType === 'mouse' && e.buttons !== 1) {
+                         handlePointerUp(e);
+                         return;
+                    }
+                    const target = canvas.findTarget(e, false);
+                    if (target && target.isHandwriting && !erasedOnStroke.has(target)) {
+                        erasedOnStroke.add(target);
+                        canvas.remove(target);
+                        canvas.requestRenderAll();
+                    }
+                    return;
+                }
                 
+                // Shape drawing logic
+                if (!isDrawingShape) return;
                 if (e.pointerType === 'mouse' && e.buttons !== 1) {
                     handlePointerUp(e);
                     return;
@@ -1289,70 +1209,78 @@
             }
 
             function handlePointerUp(e) {
+                 // Stroke eraser logic
+                if (isStrokeErasing) {
+                    isStrokeErasing = false;
+                    if (erasedOnStroke.size > 0) {
+                        saveState();
+                    }
+                    erasedOnStroke.clear();
+                    return;
+                }
+
+                // Shape drawing logic
                 if (!isDrawingShape) return;
                 
                 e.preventDefault();
                 const pointer = getPoint(e);
 
-                if (isDrawingShape) {
-                    isDrawingShape = false;
-                    canvas.clearContext(canvas.contextTop);
-                    
-                    if (shape) canvas.remove(shape);
+                isDrawingShape = false;
+                canvas.clearContext(canvas.contextTop);
+                
+                if (shape) canvas.remove(shape);
 
-                    let finalShape;
-                    const commonOptions = { 
-                        stroke: brushColor, strokeWidth: penThickness, fill: 'transparent', 
-                        selectable: false, evented: false, isShape: true, strokeUniform: true
-                    };
+                let finalShape;
+                const commonOptions = { 
+                    stroke: brushColor, strokeWidth: penThickness, fill: 'transparent', 
+                    selectable: false, evented: false, isShape: true, strokeUniform: true
+                };
 
-                    switch(currentTool) {
-                        case 'line':
-                            finalShape = new fabric.Line([startPoint.x, startPoint.y, pointer.x, pointer.y], { ...commonOptions, originX: 'center', originY: 'center' });
-                            break;
-                        case 'rect':
-                            let width = pointer.x - startPoint.x;
-                            let height = pointer.y - startPoint.y;
-                            finalShape = new fabric.Rect({ ...commonOptions, left: startPoint.x, top: startPoint.y, width: Math.abs(width), height: Math.abs(height), originX: width > 0 ? 'left' : 'right', originY: height > 0 ? 'top' : 'bottom' });
-                            break;
-                        case 'triangle':
-                            let tWidth = pointer.x - startPoint.x;
-                            let tHeight = pointer.y - startPoint.y;
-                            finalShape = new fabric.Triangle({ ...commonOptions, left: startPoint.x, top: startPoint.y, width: Math.abs(tWidth), height: Math.abs(tHeight), originX: tWidth > 0 ? 'left' : 'right', originY: tHeight > 0 ? 'top' : 'bottom' });
-                            break;
-                        case 'circle':
-                            const radius = Math.hypot(pointer.x - startPoint.x, pointer.y - startPoint.y);
-                            finalShape = new fabric.Circle({ ...commonOptions, left: startPoint.x, top: startPoint.y, radius: radius, originX: 'center', originY: 'center' });
-                            break;
-                        case 'ellipse':
-                            const rx = Math.abs(startPoint.x - pointer.x) / 2;
-                            const ry = Math.abs(startPoint.y - pointer.y) / 2;
-                            if (rx > 0 && ry > 0) {
-                                finalShape = new fabric.Ellipse({ ...commonOptions, left: (startPoint.x + pointer.x) / 2, top: (startPoint.y + pointer.y) / 2, rx: rx, ry: ry, originX: 'center', originY: 'center' });
-                            }
-                            break;
-                    }
-
-                    if (finalShape) {
-                        canvas.add(finalShape);
-                        canvas.requestRenderAll();
-                    }
-                    
-                    saveState();
-                    shape = null;
+                switch(currentTool) {
+                    case 'line':
+                        finalShape = new fabric.Line([startPoint.x, startPoint.y, pointer.x, pointer.y], { ...commonOptions, originX: 'center', originY: 'center' });
+                        break;
+                    case 'rect':
+                        let width = pointer.x - startPoint.x;
+                        let height = pointer.y - startPoint.y;
+                        finalShape = new fabric.Rect({ ...commonOptions, left: startPoint.x, top: startPoint.y, width: Math.abs(width), height: Math.abs(height), originX: width > 0 ? 'left' : 'right', originY: height > 0 ? 'top' : 'bottom' });
+                        break;
+                    case 'triangle':
+                        let tWidth = pointer.x - startPoint.x;
+                        let tHeight = pointer.y - startPoint.y;
+                        finalShape = new fabric.Triangle({ ...commonOptions, left: startPoint.x, top: startPoint.y, width: Math.abs(tWidth), height: Math.abs(tHeight), originX: tWidth > 0 ? 'left' : 'right', originY: tHeight > 0 ? 'top' : 'bottom' });
+                        break;
+                    case 'circle':
+                        const radius = Math.hypot(pointer.x - startPoint.x, pointer.y - startPoint.y);
+                        finalShape = new fabric.Circle({ ...commonOptions, left: startPoint.x, top: startPoint.y, radius: radius, originX: 'center', originY: 'center' });
+                        break;
+                    case 'ellipse':
+                        const rx = Math.abs(startPoint.x - pointer.x) / 2;
+                        const ry = Math.abs(startPoint.y - pointer.y) / 2;
+                        if (rx > 0 && ry > 0) {
+                            finalShape = new fabric.Ellipse({ ...commonOptions, left: (startPoint.x + pointer.x) / 2, top: (startPoint.y + pointer.y) / 2, rx: rx, ry: ry, originX: 'center', originY: 'center' });
+                        }
+                        break;
                 }
+
+                if (finalShape) {
+                    canvas.add(finalShape);
+                    canvas.requestRenderAll();
+                }
+                
+                saveState();
+                shape = null;
             }
 
             function getPoint(e) { return canvas.getPointer(e); }
-
-            // --- END OF DRAWING PIPELINE ---
-
+            
+            // --- TEXT & IMAGE TOOLS ---
             function addText() {
                 setTool('select');
-                const text = new fabric.IText('Double-click to edit', { left: canvas.getCenter().left, top: canvas.getCenter().top, originX: 'center', originY: 'center', fill: activeColor, fontSize: 40, fontFamily: 'Virgil', padding: 5 });
+                const text = new fabric.IText('Double-click to edit', { left: canvas.getCenter().left, top: canvas.getCenter().top, originX: 'center', originY: 'center', fill: activeColor, fontSize: 40, fontFamily: 'Poppins', padding: 5 });
                 canvas.add(text).setActiveObject(text).renderAll(); text.enterEditing(); saveState();
             }
-
+            
             function addImage(url) {
                 fabric.Image.fromURL(url, (img) => {
                     img.scaleToWidth(canvas.width * 0.3);
@@ -1361,8 +1289,48 @@
                 }, { crossOrigin: 'anonymous' });
             }
 
+            // --- TEXT TOOLBAR LOGIC ---
+            function handleSelection(e) {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject && activeObject.type === 'i-text') {
+                    showTextToolbar(activeObject);
+                } else {
+                    hideTextToolbar();
+                }
+            }
+            function showTextToolbar(textObject) {
+                textSettingsEl.classList.remove('hidden');
+                fontFamilySelect.value = textObject.fontFamily || 'Poppins';
+                fontSizeInput.value = textObject.fontSize || 40;
+                updateTextToolbarButtons(textObject);
+            }
+            function hideTextToolbar() { textSettingsEl.classList.add('hidden'); }
+            function updateTextToolbarButtons(textObject) {
+                textBoldBtn.classList.toggle('active', textObject.fontWeight === 'bold');
+                textItalicBtn.classList.toggle('active', textObject.fontStyle === 'italic');
+                textUnderlineBtn.classList.toggle('active', textObject.underline);
+            }
+            function applyTextSetting(prop, value) {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject && activeObject.type === 'i-text') {
+                    activeObject.set(prop, value);
+                    canvas.requestRenderAll();
+                    saveState();
+                }
+            }
+            function toggleTextStyle(prop, trueVal, falseVal) {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject && activeObject.type === 'i-text') {
+                    const isSet = activeObject.get(prop) === trueVal;
+                    activeObject.set(prop, isSet ? falseVal : trueVal);
+                    updateTextToolbarButtons(activeObject);
+                    canvas.requestRenderAll();
+                    saveState();
+                }
+            }
+
+            // --- CORE ACTIONS ---
             function deleteSelected() { canvas.getActiveObjects().forEach(obj => canvas.remove(obj)); canvas.discardActiveObject().renderAll(); saveState(); }
-            
             function undo() {
                 const slide = slides[currentSlideIndex];
                 if (slide && slide.historyIndex > 0) {
@@ -1372,7 +1340,6 @@
                     loadState(stateToLoad);
                 }
             }
-
             function redo() {
                 const slide = slides[currentSlideIndex];
                 if (slide && slide.historyIndex < slide.history.length - 1) {
@@ -1395,7 +1362,7 @@
                     btn.onclick = () => {
                         activeColor = color; 
                         brushColor = activeColor;
-                        if (canvas.isDrawingMode && canvas.freeDrawingBrush) {
+                        if (canvas.isDrawingMode && canvas.freeDrawingBrush && !canvas.freeDrawingBrush.isEraser) {
                             canvas.freeDrawingBrush.color = activeColor;
                         }
                         populateColorPalette();
@@ -1437,22 +1404,27 @@
                     for (const slide of slides) {
                         if (!slide.data || !slide.data.objects) continue;
                         slide.data.objects.forEach(obj => {
-                            const isRegularImage = obj.type === 'image' && !obj.isPdfImage;
-                            if ((obj.isPdfImage || isRegularImage) && invertMedia) {
-                                obj.isInverted = !obj.isInverted;
-                                obj.filters = obj.isInverted ? [{ type: 'Invert' }] : [];
+                            if(obj.isEraserStroke) {
+                                obj.stroke = newBgColor;
+                                obj.fill = newBgColor;
                             } else {
-                                const processColor = (prop) => {
-                                    if (typeof obj[prop] === 'string' && obj[prop] !== 'transparent' && obj[prop] !== null) {
-                                        const normalizedColor = new fabric.Color(obj[prop]).toHex().toLowerCase();
-                                        if (colorMap.has(normalizedColor)) { obj[prop] = colorMap.get(normalizedColor); }
-                                    }
-                                };
-                                if (obj.isMath || (obj.type === 'group' && obj.isMath)) {
-                                    processColor('fill');
-                                    if (obj.objects) { obj.objects.forEach(path => { path.fill = obj.fill; path.stroke = obj.fill; }); }
-                                } else if (obj.type === 'i-text') { processColor('fill'); } 
-                                else { processColor('fill'); processColor('stroke'); }
+                                const isRegularImage = obj.type === 'image' && !obj.isPdfImage;
+                                if ((obj.isPdfImage || isRegularImage) && invertMedia) {
+                                    obj.isInverted = !obj.isInverted;
+                                    obj.filters = obj.isInverted ? [{ type: 'Invert' }] : [];
+                                } else {
+                                    const processColor = (prop) => {
+                                        if (typeof obj[prop] === 'string' && obj[prop] !== 'transparent' && obj[prop] !== null) {
+                                            const normalizedColor = new fabric.Color(obj[prop]).toHex().toLowerCase();
+                                            if (colorMap.has(normalizedColor)) { obj[prop] = colorMap.get(normalizedColor); }
+                                        }
+                                    };
+                                    if (obj.isMath || (obj.type === 'group' && obj.isMath)) {
+                                        processColor('fill');
+                                        if (obj.objects) { obj.objects.forEach(path => { path.fill = obj.fill; path.stroke = obj.fill; }); }
+                                    } else if (obj.type === 'i-text') { processColor('fill'); } 
+                                    else { processColor('fill'); processColor('stroke'); }
+                                }
                             }
                         });
                         slide.data.background = newBgColor;
